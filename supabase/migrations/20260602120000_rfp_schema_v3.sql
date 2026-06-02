@@ -1,0 +1,7 @@
+-- rfp_schema_v3 — initial RFP portal schema
+-- Expected: 21 tables, 4 triggers, 4 views, 11 indexes
+--
+-- Paste the body of rfp_schema_v3.sql below this line.
+-- After pasting, run:
+--   supabase link --project-ref xdoqrmmcwnvhyblvbqqc
+--   supabase db push
