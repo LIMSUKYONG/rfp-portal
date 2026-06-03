@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getCurrentTenantId } from "@/lib/auth/session";
 import type {
   Project,
   ProjectCompletion,
@@ -57,12 +58,20 @@ export async function fetchDashboardData(): Promise<DashboardData> {
     };
   }
 
+  const tenantId = await getCurrentTenantId();
+  if (!tenantId) {
+    return {
+      kpi: { totalProjects: 0, inProgressCount: 0, deadlineThisWeek: 0, unresolvedRiskCount: 0, gateWaitingCount: 0 },
+      urgentItems: [], projectCards: [], risks: [], error: null,
+    };
+  }
+
   const supabase = createAdminClient();
 
   // Projects and risks are critical; completion view may timeout
   const [projectsRes, risksRes] = await Promise.all([
-    supabase.from("rfp_projects").select("*").order("created_at", { ascending: false }),
-    supabase.from("rfp_risk_logs").select("*").eq("is_resolved", false).order("created_at", { ascending: false }),
+    supabase.from("rfp_projects").select("*").eq("tenant_id", tenantId).order("created_at", { ascending: false }),
+    supabase.from("rfp_risk_logs").select("*").eq("tenant_id", tenantId).eq("is_resolved", false).order("created_at", { ascending: false }),
   ]);
 
   // Completion view is heavy (7-table JOIN) — fetch with error tolerance

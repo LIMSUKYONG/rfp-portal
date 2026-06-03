@@ -2,14 +2,13 @@
  * Server-only RFP functions — uses admin client (RLS bypass).
  */
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getCurrentTenantId } from "@/lib/auth/session";
 import type {
   RfpParsedProjectInfo,
   RfpParsedRule,
   RfpParsedDocument,
   RfpParsedLaw,
 } from "@/lib/types/database";
-
-const DEFAULT_TENANT = "00000000-0000-0000-0000-000000000001";
 
 export interface CreateProjectInput {
   projectInfo: RfpParsedProjectInfo;
@@ -23,6 +22,11 @@ export interface CreateProjectInput {
 export async function createProject(
   input: CreateProjectInput,
 ): Promise<{ projectId: string; error: string | null }> {
+  const tenantId = await getCurrentTenantId();
+  if (!tenantId) {
+    return { projectId: "", error: "로그인 정보가 없습니다. 다시 로그인해주세요." };
+  }
+
   const supabase = createAdminClient();
   const { projectInfo, rules, documents = [], laws = [], rfpFileUrl, rfpFileSizeMb } = input;
 
@@ -58,7 +62,7 @@ export async function createProject(
       rfp_file_size_mb: rfpFileSizeMb,
       rfp_parsed_at: now.toISOString(),
       rfp_parse_status: "completed",
-      tenant_id: DEFAULT_TENANT,
+      tenant_id: tenantId,
     })
     .select("id")
     .single();
@@ -83,7 +87,7 @@ export async function createProject(
         source_page: r.source_page,
         needs_review: r.needs_review,
         is_verified: false,
-        tenant_id: DEFAULT_TENANT,
+        tenant_id: tenantId,
       })),
     );
   }
@@ -100,7 +104,7 @@ export async function createProject(
         item_type: "qualification",
         condition_text: r.source_text,
         check_result: "pending",
-        tenant_id: DEFAULT_TENANT,
+        tenant_id: tenantId,
       })),
     );
   }
@@ -116,7 +120,7 @@ export async function createProject(
         submit_timing: doc.submit_timing,
         is_required: true,
         validation_status: "pending",
-        tenant_id: DEFAULT_TENANT,
+        tenant_id: tenantId,
       })
       .select("id")
       .single();
@@ -131,7 +135,7 @@ export async function createProject(
           min_required: p.min_required,
           proof_status: "pending",
           needs_review: p.needs_review,
-          tenant_id: DEFAULT_TENANT,
+          tenant_id: tenantId,
         })),
       );
     }
@@ -152,7 +156,7 @@ export async function createProject(
         ai_confidence: r.confidence,
         reviewed: false,
         sort_order: i + 1,
-        tenant_id: DEFAULT_TENANT,
+        tenant_id: tenantId,
       })),
     );
   }
@@ -173,7 +177,7 @@ export async function createProject(
       risk_message: r.source_text,
       auto_detected: true,
       is_resolved: false,
-      tenant_id: DEFAULT_TENANT,
+      tenant_id: tenantId,
     })),
     ...staleLaws.map((l) => ({
       project_id: pid,
@@ -184,7 +188,7 @@ export async function createProject(
       risk_message: l.content,
       auto_detected: true,
       is_resolved: false,
-      tenant_id: DEFAULT_TENANT,
+      tenant_id: tenantId,
     })),
   ];
 
@@ -201,7 +205,7 @@ export async function createProject(
         rfp_context: l.content,
         law_url: l.url,
         research_status: l.is_current ? "confirmed" : "pending",
-        tenant_id: DEFAULT_TENANT,
+        tenant_id: tenantId,
       })),
     );
   }

@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getCurrentTenantId } from "@/lib/auth/session";
 import type {
   Project,
   ProjectCompletion,
@@ -62,11 +63,17 @@ export async function fetchProjectList(
     return { rows: [], error: "Supabase가 설정되지 않았습니다. .env.local 파일을 확인하세요." };
   }
 
+  const tenantId = await getCurrentTenantId();
+  if (!tenantId) {
+    return { rows: [], error: null };
+  }
+
   const supabase = createAdminClient();
 
   let query = supabase
     .from("rfp_projects")
     .select("*")
+    .eq("tenant_id", tenantId)
     .order("created_at", { ascending: false });
 
   if (phase) {

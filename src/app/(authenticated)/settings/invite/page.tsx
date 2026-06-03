@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { fetchTeamMembers } from "@/lib/api/tenants";
+import { getCurrentTenantId } from "@/lib/auth/session";
 import { InviteForm } from "./_components/invite-form";
 
-// In production, tenantId comes from the JWT/session.
-// For now, use a placeholder that works with the default tenant.
-const DEFAULT_TENANT_ID = "00000000-0000-0000-0000-000000000001";
-
 export default async function InvitePage() {
-  const { members, error } = await fetchTeamMembers(DEFAULT_TENANT_ID);
+  const tenantId = await getCurrentTenantId();
+  const { members, error } = tenantId
+    ? await fetchTeamMembers(tenantId)
+    : { members: [], error: "로그인 정보가 없습니다. 다시 로그인해주세요." };
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8" data-testid="invite-page">
@@ -22,7 +22,7 @@ export default async function InvitePage() {
         <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>
       )}
 
-      <InviteForm tenantId={DEFAULT_TENANT_ID} members={members} />
+      {tenantId && <InviteForm tenantId={tenantId} members={members} />}
     </main>
   );
 }
