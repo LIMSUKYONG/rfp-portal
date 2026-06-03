@@ -148,16 +148,36 @@ export interface ExperienceRecord {
   pm: string | null;
 }
 
+export type DocValidationStatus = "valid" | "expiring_soon" | "error" | "needs_review" | "pending" | null;
+
 export interface Document {
   id: string;
   project_id: string;
+  partner_id: string | null;
   doc_category: string | null;
   doc_name: string;
+  form_number: string | null;
   is_required: boolean;
+  rfp_rule_id: string | null;
+  submit_timing: string | null;
   file_url: string | null;
-  validation_status: string | null;
+  file_size_mb: number | null;
+  file_type: string | null;
+  file_uploaded_at: string | null;
+  upload_method: string | null;
+  ai_issue_date: string | null;
+  ai_expiry_date: string | null;
+  ai_extracted_data: Record<string, unknown> | null;
+  ai_extract_status: string | null;
+  validation_status: DocValidationStatus;
   validation_message: string | null;
+  validation_source: string | null;
+  validated_at: string | null;
+  linked_score_item: string | null;
+  calculated_score: number | null;
   needs_review: boolean;
+  review_reason: string | null;
+  created_at: string;
 }
 
 /* ── RFP parse related ── */
