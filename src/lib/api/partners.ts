@@ -29,12 +29,12 @@ export async function fetchPartners(
 
   const [partnersRes, projectRes, ruleRes, completionRes] = await Promise.all([
     supabase
-      .from("partners")
+      .from("rfp_partners")
       .select("*")
       .eq("project_id", projectId)
       .order("created_at", { ascending: true }),
     supabase
-      .from("projects")
+      .from("rfp_projects")
       .select("budget_amount")
       .eq("id", projectId)
       .single(),
@@ -45,7 +45,7 @@ export async function fetchPartners(
       .eq("rule_type", "subcontract")
       .limit(1),
     supabase
-      .from("project_completion")
+      .from("rfp_project_completion")
       .select("partner_pct")
       .eq("id", projectId)
       .single(),
@@ -95,7 +95,7 @@ export async function createPartner(
   const supabase = createClient();
 
   const { data, error } = await supabase
-    .from("partners")
+    .from("rfp_partners")
     .insert({
       project_id: input.project_id,
       partner_type: input.partner_type,
@@ -124,7 +124,7 @@ export async function updatePartner(
 
   const supabase = createClient();
   const { error } = await supabase
-    .from("partners")
+    .from("rfp_partners")
     .update({ ...update, updated_at: new Date().toISOString() })
     .eq("id", partnerId);
 
@@ -140,7 +140,7 @@ export async function deletePartner(
 
   const supabase = createClient();
   const { error } = await supabase
-    .from("partners")
+    .from("rfp_partners")
     .delete()
     .eq("id", partnerId);
 

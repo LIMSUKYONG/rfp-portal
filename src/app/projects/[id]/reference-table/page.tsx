@@ -18,7 +18,7 @@ export default async function ReferenceTablePage({ params }: Props) {
   try {
     const supabase = createClient();
     const { data: proj } = await supabase
-      .from("projects")
+      .from("rfp_projects")
       .select("name")
       .eq("id", projectId)
       .single();

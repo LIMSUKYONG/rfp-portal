@@ -60,9 +60,9 @@ export async function fetchDashboardData(): Promise<DashboardData> {
   const supabase = createClient();
 
   const [projectsRes, completionRes, risksRes] = await Promise.all([
-    supabase.from("projects").select("*").order("created_at", { ascending: false }),
-    supabase.from("project_completion").select("*"),
-    supabase.from("risk_logs").select("*").eq("is_resolved", false).order("created_at", { ascending: false }),
+    supabase.from("rfp_projects").select("*").order("created_at", { ascending: false }),
+    supabase.from("rfp_project_completion").select("*"),
+    supabase.from("rfp_risk_logs").select("*").eq("is_resolved", false).order("created_at", { ascending: false }),
   ]);
 
   const projects = (projectsRes.data ?? []) as Project[];
@@ -140,7 +140,7 @@ export async function resolveRisk(riskId: string): Promise<{ error: string | nul
   if (!isSupabaseConfigured()) return { error: "Supabase 미설정" };
   const supabase = createClient();
   const { error } = await supabase
-    .from("risk_logs")
+    .from("rfp_risk_logs")
     .update({ is_resolved: true, resolved_at: new Date().toISOString() })
     .eq("id", riskId);
   return { error: error?.message ?? null };

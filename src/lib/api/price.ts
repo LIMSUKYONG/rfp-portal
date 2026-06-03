@@ -19,8 +19,8 @@ export async function fetchPriceSimulations(projectId: string): Promise<PricePag
 
   const supabase = createClient();
   const [simRes, projRes, ruleRes] = await Promise.all([
-    supabase.from("price_simulations").select("*").eq("project_id", projectId).order("created_at", { ascending: false }).limit(1),
-    supabase.from("projects").select("phase, budget_amount").eq("id", projectId).single(),
+    supabase.from("rfp_price_simulations").select("*").eq("project_id", projectId).order("created_at", { ascending: false }).limit(1),
+    supabase.from("rfp_projects").select("phase, budget_amount").eq("id", projectId).single(),
     supabase.from("rfp_rules").select("condition_value").eq("project_id", projectId).eq("rule_type", "price_formula").limit(1),
   ]);
 
@@ -46,7 +46,7 @@ export async function savePriceSimulation(projectId: string, data: {
 }): Promise<{ error: string | null }> {
   if (!isSupabaseConfigured()) return { error: "Supabase 미설정" };
   const supabase = createClient();
-  const { error } = await supabase.from("price_simulations").insert({
+  const { error } = await supabase.from("rfp_price_simulations").insert({
     project_id: projectId, ...data, selected_at: new Date().toISOString(),
   });
   return { error: error?.message ?? null };
@@ -55,6 +55,6 @@ export async function savePriceSimulation(projectId: string, data: {
 export async function confirmBidPrice(projectId: string): Promise<{ error: string | null }> {
   if (!isSupabaseConfigured()) return { error: "Supabase 미설정" };
   const supabase = createClient();
-  const { error } = await supabase.from("projects").update({ phase: "bid_submitted", updated_at: new Date().toISOString() }).eq("id", projectId);
+  const { error } = await supabase.from("rfp_projects").update({ phase: "bid_submitted", updated_at: new Date().toISOString() }).eq("id", projectId);
   return { error: error?.message ?? null };
 }

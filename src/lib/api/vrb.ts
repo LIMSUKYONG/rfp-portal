@@ -35,18 +35,18 @@ export async function fetchVrbReviews(
 
   const [vrbRes, projectRes, plRes] = await Promise.all([
     supabase
-      .from("vrb_reviews")
+      .from("rfp_vrb_reviews")
       .select("*")
       .eq("project_id", projectId)
       .order("vrb_round", { ascending: false })
       .limit(1),
     supabase
-      .from("projects")
+      .from("rfp_projects")
       .select("phase, vrb_deadline")
       .eq("id", projectId)
       .single(),
     supabase
-      .from("profit_loss")
+      .from("rfp_profit_loss")
       .select("*")
       .eq("project_id", projectId)
       .order("updated_at", { ascending: false })
@@ -58,7 +58,7 @@ export async function fetchVrbReviews(
   let deptReviews: VrbDeptReview[] = [];
   if (vrbReview) {
     const { data } = await supabase
-      .from("vrb_dept_reviews")
+      .from("rfp_vrb_dept_reviews")
       .select("*")
       .eq("vrb_id", vrbReview.id)
       .order("created_at", { ascending: true });
@@ -83,7 +83,7 @@ export async function updateDeptReview(
 
   const supabase = createClient();
   const { error } = await supabase
-    .from("vrb_dept_reviews")
+    .from("rfp_vrb_dept_reviews")
     .update({ ...update, reviewed_at: new Date().toISOString() })
     .eq("id", deptId);
 
@@ -102,7 +102,7 @@ export async function approveVrb(
 
   // Update vrb_reviews
   const { error: vrbErr } = await supabase
-    .from("vrb_reviews")
+    .from("rfp_vrb_reviews")
     .update({
       vrb_proceed: approved,
       meeting_result: approved ? "승인" : `반려: ${rejectReason ?? ""}`,
@@ -115,7 +115,7 @@ export async function approveVrb(
   if (approved) {
     // Check if track_a is done to auto-transition to price_ready
     const { data: proj } = await supabase
-      .from("projects")
+      .from("rfp_projects")
       .select("phase")
       .eq("id", projectId)
       .single();
@@ -124,7 +124,7 @@ export async function approveVrb(
       proj?.phase === "track_a_done" ? "price_ready" : "vrb_approved";
 
     const { error: projErr } = await supabase
-      .from("projects")
+      .from("rfp_projects")
       .update({ phase: nextPhase, updated_at: new Date().toISOString() })
       .eq("id", projectId);
 
@@ -160,7 +160,7 @@ export async function fetchProfitLoss(
 
   const [plRes, ruleRes] = await Promise.all([
     supabase
-      .from("profit_loss")
+      .from("rfp_profit_loss")
       .select("*")
       .eq("project_id", projectId)
       .order("updated_at", { ascending: false })
@@ -211,20 +211,20 @@ export async function updateProfitLoss(
 
   // Check if profit_loss row exists
   const { data: existing } = await supabase
-    .from("profit_loss")
+    .from("rfp_profit_loss")
     .select("id")
     .eq("project_id", projectId)
     .limit(1);
 
   if (existing && existing.length > 0) {
     const { error } = await supabase
-      .from("profit_loss")
+      .from("rfp_profit_loss")
       .update({ ...update, updated_at: new Date().toISOString() })
       .eq("project_id", projectId);
     return { error: error?.message ?? null };
   } else {
     const { error } = await supabase
-      .from("profit_loss")
+      .from("rfp_profit_loss")
       .insert({ project_id: projectId, ...update });
     return { error: error?.message ?? null };
   }

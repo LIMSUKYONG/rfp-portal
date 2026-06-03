@@ -39,7 +39,7 @@ export async function fetchQualifications(
 
   const [checksRes, rulesRes, expRes, projectRes] = await Promise.all([
     supabase
-      .from("qualification_checks")
+      .from("rfp_qualification_checks")
       .select("*")
       .eq("project_id", projectId)
       .order("created_at", { ascending: true }),
@@ -47,9 +47,9 @@ export async function fetchQualifications(
       .from("rfp_rules")
       .select("id, source_page, source_type")
       .eq("project_id", projectId),
-    supabase.from("experience_records").select("*"),
+    supabase.from("rfp_experience_records").select("*"),
     supabase
-      .from("projects")
+      .from("rfp_projects")
       .select("phase")
       .eq("id", projectId)
       .single(),
@@ -93,7 +93,7 @@ export async function updateCheckStatus(
   const supabase = createClient();
 
   const { error } = await supabase
-    .from("qualification_checks")
+    .from("rfp_qualification_checks")
     .update({
       check_result: result,
       checked_at: result === "pass" ? new Date().toISOString() : null,
@@ -116,7 +116,7 @@ export async function updateProjectPhase(
   const supabase = createClient();
 
   const { error } = await supabase
-    .from("projects")
+    .from("rfp_projects")
     .update({ phase, updated_at: new Date().toISOString() })
     .eq("id", projectId);
 

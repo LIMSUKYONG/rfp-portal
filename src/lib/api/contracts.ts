@@ -16,7 +16,7 @@ export async function fetchContract(projectId: string): Promise<ContractPageData
 
   const supabase = createClient();
   const [cRes, ruleRes] = await Promise.all([
-    supabase.from("contracts").select("*").eq("project_id", projectId).order("created_at", { ascending: false }).limit(1),
+    supabase.from("rfp_contracts").select("*").eq("project_id", projectId).order("created_at", { ascending: false }).limit(1),
     supabase.from("rfp_rules").select("condition_value").eq("project_id", projectId).eq("rule_type", "contract_conditions").limit(1),
   ]);
 
@@ -47,14 +47,14 @@ export async function saveContract(projectId: string, data: {
   if (!isSupabaseConfigured()) return { contractId: "", error: "Supabase 미설정" };
   const supabase = createClient();
 
-  const { data: c, error: cErr } = await supabase.from("contracts").insert({
+  const { data: c, error: cErr } = await supabase.from("rfp_contracts").insert({
     project_id: projectId, ...data, registered_as_experience: true,
   }).select("id").single();
 
   if (cErr) return { contractId: "", error: cErr.message };
 
   // Update phase
-  await supabase.from("projects").update({ phase: "contract_signed", updated_at: new Date().toISOString() }).eq("id", projectId);
+  await supabase.from("rfp_projects").update({ phase: "contract_signed", updated_at: new Date().toISOString() }).eq("id", projectId);
 
   return { contractId: (c?.id as string) ?? "", error: null };
 }

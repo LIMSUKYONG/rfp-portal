@@ -22,7 +22,7 @@ export async function fetchLatestProposal(
 
   const supabase = createClient();
   const { data, error } = await supabase
-    .from("proposals")
+    .from("rfp_proposals")
     .select("*")
     .eq("project_id", projectId)
     .order("version", { ascending: false })
@@ -62,7 +62,7 @@ export async function saveProposalEvaluation(
   const supabase = createClient();
 
   const { data, error } = await supabase
-    .from("proposals")
+    .from("rfp_proposals")
     .insert({
       project_id: projectId,
       file_url: fileUrl,
@@ -87,7 +87,7 @@ export async function completeTrackA(
 
   const supabase = createClient();
   const { error } = await supabase
-    .from("projects")
+    .from("rfp_projects")
     .update({
       phase: "track_a_done",
       updated_at: new Date().toISOString(),

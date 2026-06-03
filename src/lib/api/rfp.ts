@@ -37,7 +37,7 @@ export async function createProject(
 
   // 1. Insert project
   const { data: project, error: projectError } = await supabase
-    .from("projects")
+    .from("rfp_projects")
     .insert({
       code,
       name: projectInfo.name ?? "미정",

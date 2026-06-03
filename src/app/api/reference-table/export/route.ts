@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
 
   // Fetch items
   const { data, error } = await supabase
-    .from("reference_table_items")
+    .from("rfp_reference_table_items")
     .select("*")
     .eq("project_id", body.projectId)
     .order("sort_order", { ascending: true });

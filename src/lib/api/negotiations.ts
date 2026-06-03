@@ -18,8 +18,8 @@ export async function fetchNegotiations(projectId: string): Promise<NegotiationP
 
   const supabase = createClient();
   const [negRes, simRes, ruleRes] = await Promise.all([
-    supabase.from("negotiations").select("*").eq("project_id", projectId).order("negotiation_round", { ascending: true }),
-    supabase.from("price_simulations").select("selected_price").eq("project_id", projectId).order("created_at", { ascending: false }).limit(1),
+    supabase.from("rfp_negotiations").select("*").eq("project_id", projectId).order("negotiation_round", { ascending: true }),
+    supabase.from("rfp_price_simulations").select("selected_price").eq("project_id", projectId).order("created_at", { ascending: false }).limit(1),
     supabase.from("rfp_rules").select("condition_value").eq("project_id", projectId).eq("rule_type", "negotiation_price_rules").limit(1),
   ]);
 
@@ -49,10 +49,10 @@ export async function addNegotiationRound(projectId: string, data: {
   const supabase = createClient();
 
   // Get next round number
-  const { data: existing } = await supabase.from("negotiations").select("negotiation_round").eq("project_id", projectId).order("negotiation_round", { ascending: false }).limit(1);
+  const { data: existing } = await supabase.from("rfp_negotiations").select("negotiation_round").eq("project_id", projectId).order("negotiation_round", { ascending: false }).limit(1);
   const nextRound = ((existing?.[0] as { negotiation_round?: number })?.negotiation_round ?? 0) + 1;
 
-  const { error } = await supabase.from("negotiations").insert({
+  const { error } = await supabase.from("rfp_negotiations").insert({
     project_id: projectId, negotiation_round: nextRound, ...data,
   });
   return { error: error?.message ?? null };
@@ -61,6 +61,6 @@ export async function addNegotiationRound(projectId: string, data: {
 export async function confirmFinalPrice(projectId: string, finalAmount: number): Promise<{ error: string | null }> {
   if (!isSupabaseConfigured()) return { error: "Supabase 미설정" };
   const supabase = createClient();
-  const { error } = await supabase.from("projects").update({ phase: "selected", updated_at: new Date().toISOString() }).eq("id", projectId);
+  const { error } = await supabase.from("rfp_projects").update({ phase: "selected", updated_at: new Date().toISOString() }).eq("id", projectId);
   return { error: error?.message ?? null };
 }

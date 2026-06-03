@@ -65,7 +65,7 @@ export async function fetchProjectList(
   const supabase = createClient();
 
   let query = supabase
-    .from("projects")
+    .from("rfp_projects")
     .select("*")
     .order("created_at", { ascending: false });
 
@@ -75,9 +75,9 @@ export async function fetchProjectList(
 
   const [projectsRes, completionRes, vrbRes] = await Promise.all([
     query,
-    supabase.from("project_completion").select("*"),
+    supabase.from("rfp_project_completion").select("*"),
     supabase
-      .from("vrb_reviews")
+      .from("rfp_vrb_reviews")
       .select("*")
       .order("vrb_round", { ascending: false }),
   ]);
@@ -138,37 +138,37 @@ export async function fetchProjectDetail(
     docRes,
     partnerRes,
   ] = await Promise.all([
-    supabase.from("projects").select("*").eq("id", id).single(),
-    supabase.from("project_completion").select("*").eq("id", id).single(),
+    supabase.from("rfp_projects").select("*").eq("id", id).single(),
+    supabase.from("rfp_project_completion").select("*").eq("id", id).single(),
     supabase
-      .from("vrb_reviews")
+      .from("rfp_vrb_reviews")
       .select("*")
       .eq("project_id", id)
       .order("vrb_round", { ascending: false }),
     supabase
-      .from("profit_loss")
+      .from("rfp_profit_loss")
       .select("*")
       .eq("project_id", id)
       .order("updated_at", { ascending: false })
       .limit(1),
     supabase
-      .from("risk_logs")
+      .from("rfp_risk_logs")
       .select("*")
       .eq("project_id", id)
       .eq("is_resolved", false)
       .order("created_at", { ascending: false }),
     supabase
-      .from("qualification_checks")
+      .from("rfp_qualification_checks")
       .select("*")
       .eq("project_id", id)
       .order("created_at", { ascending: true }),
     supabase
-      .from("documents")
+      .from("rfp_documents")
       .select("*")
       .eq("project_id", id)
       .order("created_at", { ascending: true }),
     supabase
-      .from("partners")
+      .from("rfp_partners")
       .select("*")
       .eq("project_id", id)
       .order("created_at", { ascending: true }),

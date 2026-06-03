@@ -17,9 +17,9 @@ export async function fetchBidResult(projectId: string): Promise<BidResultPageDa
 
   const supabase = createClient();
   const [brRes, propRes, simRes] = await Promise.all([
-    supabase.from("bid_results").select("*").eq("project_id", projectId).order("created_at", { ascending: false }).limit(1),
-    supabase.from("proposals").select("tech_score_total").eq("project_id", projectId).order("version", { ascending: false }).limit(1),
-    supabase.from("price_simulations").select("selected_price").eq("project_id", projectId).order("created_at", { ascending: false }).limit(1),
+    supabase.from("rfp_bid_results").select("*").eq("project_id", projectId).order("created_at", { ascending: false }).limit(1),
+    supabase.from("rfp_proposals").select("tech_score_total").eq("project_id", projectId).order("version", { ascending: false }).limit(1),
+    supabase.from("rfp_price_simulations").select("selected_price").eq("project_id", projectId).order("created_at", { ascending: false }).limit(1),
   ]);
 
   return {
@@ -45,7 +45,7 @@ export async function saveBidResult(projectId: string, data: {
   if (!isSupabaseConfigured()) return { error: "Supabase 미설정" };
   const supabase = createClient();
 
-  const { error: brErr } = await supabase.from("bid_results").insert({
+  const { error: brErr } = await supabase.from("rfp_bid_results").insert({
     project_id: projectId, ...data, submitted_at: new Date().toISOString(),
   });
   if (brErr) return { error: brErr.message };
@@ -55,7 +55,7 @@ export async function saveBidResult(projectId: string, data: {
     selected: "selected", lost: "lost", re_announce: "rfp_registered",
   };
   const nextPhase = phaseMap[data.result_type] ?? "bid_submitted";
-  const { error: pErr } = await supabase.from("projects").update({ phase: nextPhase, updated_at: new Date().toISOString() }).eq("id", projectId);
+  const { error: pErr } = await supabase.from("rfp_projects").update({ phase: nextPhase, updated_at: new Date().toISOString() }).eq("id", projectId);
 
   return { error: pErr?.message ?? null };
 }

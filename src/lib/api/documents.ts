@@ -57,7 +57,7 @@ export async function fetchDocuments(
 
   const [docsRes, rulesRes, completionRes, extrasRes, proofsRes] = await Promise.all([
     supabase
-      .from("documents")
+      .from("rfp_documents")
       .select("*")
       .eq("project_id", projectId)
       .order("created_at", { ascending: true }),
@@ -66,7 +66,7 @@ export async function fetchDocuments(
       .select("id, source_page, source_type")
       .eq("project_id", projectId),
     supabase
-      .from("project_completion")
+      .from("rfp_project_completion")
       .select("document_pct")
       .eq("id", projectId)
       .single(),
@@ -76,7 +76,7 @@ export async function fetchDocuments(
       .eq("project_id", projectId)
       .in("rule_type", CHECKLIST_RULE_TYPES),
     supabase
-      .from("document_proof_items")
+      .from("rfp_document_proof_items")
       .select("*")
       .order("condition_group", { ascending: true }),
   ]);
@@ -131,7 +131,7 @@ export async function updateDocumentValidation(
 
   const supabase = createClient();
   const { error } = await supabase
-    .from("documents")
+    .from("rfp_documents")
     .update({
       ...update,
       file_uploaded_at: new Date().toISOString(),

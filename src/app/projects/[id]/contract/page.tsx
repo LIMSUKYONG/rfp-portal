@@ -12,7 +12,7 @@ export default async function ContractPage({ params }: Props) {
   let projectName = "project";
   try {
     const supabase = createClient();
-    const { data: proj } = await supabase.from("projects").select("name").eq("id", projectId).single();
+    const { data: proj } = await supabase.from("rfp_projects").select("name").eq("id", projectId).single();
     if (proj?.name) projectName = proj.name as string;
   } catch { /* ignore */ }
 

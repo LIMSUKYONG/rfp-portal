@@ -27,7 +27,7 @@ export async function fetchReferenceTable(
 
   const [itemsRes, implRes] = await Promise.all([
     supabase
-      .from("reference_table_items")
+      .from("rfp_reference_table_items")
       .select("*")
       .eq("project_id", projectId)
       .order("sort_order", { ascending: true }),
@@ -84,7 +84,7 @@ export async function updateRefTableItem(
 
   const supabase = createClient();
   const { error } = await supabase
-    .from("reference_table_items")
+    .from("rfp_reference_table_items")
     .update({
       ...update,
       reviewed_at: update.reviewed ? new Date().toISOString() : undefined,
@@ -105,7 +105,7 @@ export async function createRefTableExport(
 
   const supabase = createClient();
   const { data, error } = await supabase
-    .from("reference_table_exports")
+    .from("rfp_reference_table_exports")
     .insert({
       project_id: projectId,
       export_format: "xlsx",
