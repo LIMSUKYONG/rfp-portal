@@ -16,127 +16,127 @@ ALTER TABLE rfp_users
   ADD CONSTRAINT fk_rfp_users_tenant
   FOREIGN KEY (tenant_id) REFERENCES rfp_tenants(id);
 
--- 3. 기존 데이터 마이그레이션용 default tenant 생성
+-- 3. default tenant 생성
 INSERT INTO rfp_tenants (id, name, plan)
 VALUES ('00000000-0000-0000-0000-000000000001', 'Default Tenant', 'pro')
 ON CONFLICT DO NOTHING;
 
--- 4. 모든 테이블에 tenant_id 추가 (실제 테이블명 사용)
-ALTER TABLE projects                ADD COLUMN tenant_id UUID REFERENCES rfp_tenants(id);
-ALTER TABLE rfp_rules               ADD COLUMN tenant_id UUID REFERENCES rfp_tenants(id);
-ALTER TABLE rfp_law_references      ADD COLUMN tenant_id UUID REFERENCES rfp_tenants(id);
-ALTER TABLE qualification_checks    ADD COLUMN tenant_id UUID REFERENCES rfp_tenants(id);
-ALTER TABLE vrb_reviews             ADD COLUMN tenant_id UUID REFERENCES rfp_tenants(id);
-ALTER TABLE vrb_dept_reviews        ADD COLUMN tenant_id UUID REFERENCES rfp_tenants(id);
-ALTER TABLE profit_loss             ADD COLUMN tenant_id UUID REFERENCES rfp_tenants(id);
-ALTER TABLE inhouse_members         ADD COLUMN tenant_id UUID REFERENCES rfp_tenants(id);
-ALTER TABLE partners                ADD COLUMN tenant_id UUID REFERENCES rfp_tenants(id);
-ALTER TABLE documents               ADD COLUMN tenant_id UUID REFERENCES rfp_tenants(id);
-ALTER TABLE document_proof_items    ADD COLUMN tenant_id UUID REFERENCES rfp_tenants(id);
-ALTER TABLE evaluation_criteria     ADD COLUMN tenant_id UUID REFERENCES rfp_tenants(id);
-ALTER TABLE reference_table_items   ADD COLUMN tenant_id UUID REFERENCES rfp_tenants(id);
-ALTER TABLE proposals               ADD COLUMN tenant_id UUID REFERENCES rfp_tenants(id);
-ALTER TABLE reference_table_exports ADD COLUMN tenant_id UUID REFERENCES rfp_tenants(id);
-ALTER TABLE price_simulations       ADD COLUMN tenant_id UUID REFERENCES rfp_tenants(id);
-ALTER TABLE bid_results             ADD COLUMN tenant_id UUID REFERENCES rfp_tenants(id);
-ALTER TABLE negotiations            ADD COLUMN tenant_id UUID REFERENCES rfp_tenants(id);
-ALTER TABLE contracts               ADD COLUMN tenant_id UUID REFERENCES rfp_tenants(id);
-ALTER TABLE mail_logs               ADD COLUMN tenant_id UUID REFERENCES rfp_tenants(id);
-ALTER TABLE risk_logs               ADD COLUMN tenant_id UUID REFERENCES rfp_tenants(id);
-ALTER TABLE rfp_project_members     ADD COLUMN tenant_id UUID REFERENCES rfp_tenants(id);
+-- 4. 모든 테이블에 tenant_id 추가 (원격 DB 실제 테이블명)
+ALTER TABLE rfp_projects              ADD COLUMN tenant_id UUID REFERENCES rfp_tenants(id);
+ALTER TABLE rfp_rules                 ADD COLUMN tenant_id UUID REFERENCES rfp_tenants(id);
+ALTER TABLE rfp_law_references        ADD COLUMN tenant_id UUID REFERENCES rfp_tenants(id);
+ALTER TABLE rfp_qualification_checks  ADD COLUMN tenant_id UUID REFERENCES rfp_tenants(id);
+ALTER TABLE rfp_vrb_reviews           ADD COLUMN tenant_id UUID REFERENCES rfp_tenants(id);
+ALTER TABLE rfp_vrb_dept_reviews      ADD COLUMN tenant_id UUID REFERENCES rfp_tenants(id);
+ALTER TABLE rfp_profit_loss           ADD COLUMN tenant_id UUID REFERENCES rfp_tenants(id);
+ALTER TABLE rfp_inhouse_members       ADD COLUMN tenant_id UUID REFERENCES rfp_tenants(id);
+ALTER TABLE rfp_partners              ADD COLUMN tenant_id UUID REFERENCES rfp_tenants(id);
+ALTER TABLE rfp_documents             ADD COLUMN tenant_id UUID REFERENCES rfp_tenants(id);
+ALTER TABLE rfp_document_proof_items  ADD COLUMN tenant_id UUID REFERENCES rfp_tenants(id);
+ALTER TABLE rfp_evaluation_criteria   ADD COLUMN tenant_id UUID REFERENCES rfp_tenants(id);
+ALTER TABLE rfp_reference_table_items ADD COLUMN tenant_id UUID REFERENCES rfp_tenants(id);
+ALTER TABLE rfp_proposals             ADD COLUMN tenant_id UUID REFERENCES rfp_tenants(id);
+ALTER TABLE rfp_reference_table_exports ADD COLUMN tenant_id UUID REFERENCES rfp_tenants(id);
+ALTER TABLE rfp_price_simulations     ADD COLUMN tenant_id UUID REFERENCES rfp_tenants(id);
+ALTER TABLE rfp_bid_results           ADD COLUMN tenant_id UUID REFERENCES rfp_tenants(id);
+ALTER TABLE rfp_negotiations          ADD COLUMN tenant_id UUID REFERENCES rfp_tenants(id);
+ALTER TABLE rfp_contracts             ADD COLUMN tenant_id UUID REFERENCES rfp_tenants(id);
+ALTER TABLE rfp_mail_logs             ADD COLUMN tenant_id UUID REFERENCES rfp_tenants(id);
+ALTER TABLE rfp_risk_logs             ADD COLUMN tenant_id UUID REFERENCES rfp_tenants(id);
+ALTER TABLE rfp_project_members       ADD COLUMN tenant_id UUID REFERENCES rfp_tenants(id);
 
 -- 5. 기존 데이터 default tenant 할당
-UPDATE projects                SET tenant_id = '00000000-0000-0000-0000-000000000001' WHERE tenant_id IS NULL;
-UPDATE rfp_rules               SET tenant_id = '00000000-0000-0000-0000-000000000001' WHERE tenant_id IS NULL;
-UPDATE rfp_law_references      SET tenant_id = '00000000-0000-0000-0000-000000000001' WHERE tenant_id IS NULL;
-UPDATE qualification_checks    SET tenant_id = '00000000-0000-0000-0000-000000000001' WHERE tenant_id IS NULL;
-UPDATE vrb_reviews             SET tenant_id = '00000000-0000-0000-0000-000000000001' WHERE tenant_id IS NULL;
-UPDATE vrb_dept_reviews        SET tenant_id = '00000000-0000-0000-0000-000000000001' WHERE tenant_id IS NULL;
-UPDATE profit_loss             SET tenant_id = '00000000-0000-0000-0000-000000000001' WHERE tenant_id IS NULL;
-UPDATE inhouse_members         SET tenant_id = '00000000-0000-0000-0000-000000000001' WHERE tenant_id IS NULL;
-UPDATE partners                SET tenant_id = '00000000-0000-0000-0000-000000000001' WHERE tenant_id IS NULL;
-UPDATE documents               SET tenant_id = '00000000-0000-0000-0000-000000000001' WHERE tenant_id IS NULL;
-UPDATE document_proof_items    SET tenant_id = '00000000-0000-0000-0000-000000000001' WHERE tenant_id IS NULL;
-UPDATE evaluation_criteria     SET tenant_id = '00000000-0000-0000-0000-000000000001' WHERE tenant_id IS NULL;
-UPDATE reference_table_items   SET tenant_id = '00000000-0000-0000-0000-000000000001' WHERE tenant_id IS NULL;
-UPDATE proposals               SET tenant_id = '00000000-0000-0000-0000-000000000001' WHERE tenant_id IS NULL;
-UPDATE reference_table_exports SET tenant_id = '00000000-0000-0000-0000-000000000001' WHERE tenant_id IS NULL;
-UPDATE price_simulations       SET tenant_id = '00000000-0000-0000-0000-000000000001' WHERE tenant_id IS NULL;
-UPDATE bid_results             SET tenant_id = '00000000-0000-0000-0000-000000000001' WHERE tenant_id IS NULL;
-UPDATE negotiations            SET tenant_id = '00000000-0000-0000-0000-000000000001' WHERE tenant_id IS NULL;
-UPDATE contracts               SET tenant_id = '00000000-0000-0000-0000-000000000001' WHERE tenant_id IS NULL;
-UPDATE mail_logs               SET tenant_id = '00000000-0000-0000-0000-000000000001' WHERE tenant_id IS NULL;
-UPDATE risk_logs               SET tenant_id = '00000000-0000-0000-0000-000000000001' WHERE tenant_id IS NULL;
-UPDATE rfp_users               SET tenant_id = '00000000-0000-0000-0000-000000000001' WHERE tenant_id IS NULL;
-UPDATE rfp_project_members     SET tenant_id = '00000000-0000-0000-0000-000000000001' WHERE tenant_id IS NULL;
+UPDATE rfp_projects              SET tenant_id = '00000000-0000-0000-0000-000000000001' WHERE tenant_id IS NULL;
+UPDATE rfp_rules                 SET tenant_id = '00000000-0000-0000-0000-000000000001' WHERE tenant_id IS NULL;
+UPDATE rfp_law_references        SET tenant_id = '00000000-0000-0000-0000-000000000001' WHERE tenant_id IS NULL;
+UPDATE rfp_qualification_checks  SET tenant_id = '00000000-0000-0000-0000-000000000001' WHERE tenant_id IS NULL;
+UPDATE rfp_vrb_reviews           SET tenant_id = '00000000-0000-0000-0000-000000000001' WHERE tenant_id IS NULL;
+UPDATE rfp_vrb_dept_reviews      SET tenant_id = '00000000-0000-0000-0000-000000000001' WHERE tenant_id IS NULL;
+UPDATE rfp_profit_loss           SET tenant_id = '00000000-0000-0000-0000-000000000001' WHERE tenant_id IS NULL;
+UPDATE rfp_inhouse_members       SET tenant_id = '00000000-0000-0000-0000-000000000001' WHERE tenant_id IS NULL;
+UPDATE rfp_partners              SET tenant_id = '00000000-0000-0000-0000-000000000001' WHERE tenant_id IS NULL;
+UPDATE rfp_documents             SET tenant_id = '00000000-0000-0000-0000-000000000001' WHERE tenant_id IS NULL;
+UPDATE rfp_document_proof_items  SET tenant_id = '00000000-0000-0000-0000-000000000001' WHERE tenant_id IS NULL;
+UPDATE rfp_evaluation_criteria   SET tenant_id = '00000000-0000-0000-0000-000000000001' WHERE tenant_id IS NULL;
+UPDATE rfp_reference_table_items SET tenant_id = '00000000-0000-0000-0000-000000000001' WHERE tenant_id IS NULL;
+UPDATE rfp_proposals             SET tenant_id = '00000000-0000-0000-0000-000000000001' WHERE tenant_id IS NULL;
+UPDATE rfp_reference_table_exports SET tenant_id = '00000000-0000-0000-0000-000000000001' WHERE tenant_id IS NULL;
+UPDATE rfp_price_simulations     SET tenant_id = '00000000-0000-0000-0000-000000000001' WHERE tenant_id IS NULL;
+UPDATE rfp_bid_results           SET tenant_id = '00000000-0000-0000-0000-000000000001' WHERE tenant_id IS NULL;
+UPDATE rfp_negotiations          SET tenant_id = '00000000-0000-0000-0000-000000000001' WHERE tenant_id IS NULL;
+UPDATE rfp_contracts             SET tenant_id = '00000000-0000-0000-0000-000000000001' WHERE tenant_id IS NULL;
+UPDATE rfp_mail_logs             SET tenant_id = '00000000-0000-0000-0000-000000000001' WHERE tenant_id IS NULL;
+UPDATE rfp_risk_logs             SET tenant_id = '00000000-0000-0000-0000-000000000001' WHERE tenant_id IS NULL;
+UPDATE rfp_users                 SET tenant_id = '00000000-0000-0000-0000-000000000001' WHERE tenant_id IS NULL;
+UPDATE rfp_project_members       SET tenant_id = '00000000-0000-0000-0000-000000000001' WHERE tenant_id IS NULL;
 
--- 6. NOT NULL 제약조건 추가
-ALTER TABLE projects                ALTER COLUMN tenant_id SET NOT NULL;
-ALTER TABLE rfp_rules               ALTER COLUMN tenant_id SET NOT NULL;
-ALTER TABLE rfp_law_references      ALTER COLUMN tenant_id SET NOT NULL;
-ALTER TABLE qualification_checks    ALTER COLUMN tenant_id SET NOT NULL;
-ALTER TABLE vrb_reviews             ALTER COLUMN tenant_id SET NOT NULL;
-ALTER TABLE vrb_dept_reviews        ALTER COLUMN tenant_id SET NOT NULL;
-ALTER TABLE profit_loss             ALTER COLUMN tenant_id SET NOT NULL;
-ALTER TABLE inhouse_members         ALTER COLUMN tenant_id SET NOT NULL;
-ALTER TABLE partners                ALTER COLUMN tenant_id SET NOT NULL;
-ALTER TABLE documents               ALTER COLUMN tenant_id SET NOT NULL;
-ALTER TABLE document_proof_items    ALTER COLUMN tenant_id SET NOT NULL;
-ALTER TABLE evaluation_criteria     ALTER COLUMN tenant_id SET NOT NULL;
-ALTER TABLE reference_table_items   ALTER COLUMN tenant_id SET NOT NULL;
-ALTER TABLE proposals               ALTER COLUMN tenant_id SET NOT NULL;
-ALTER TABLE reference_table_exports ALTER COLUMN tenant_id SET NOT NULL;
-ALTER TABLE price_simulations       ALTER COLUMN tenant_id SET NOT NULL;
-ALTER TABLE bid_results             ALTER COLUMN tenant_id SET NOT NULL;
-ALTER TABLE negotiations            ALTER COLUMN tenant_id SET NOT NULL;
-ALTER TABLE contracts               ALTER COLUMN tenant_id SET NOT NULL;
-ALTER TABLE mail_logs               ALTER COLUMN tenant_id SET NOT NULL;
-ALTER TABLE risk_logs               ALTER COLUMN tenant_id SET NOT NULL;
-ALTER TABLE rfp_project_members     ALTER COLUMN tenant_id SET NOT NULL;
+-- 6. NOT NULL 제약조건
+ALTER TABLE rfp_projects              ALTER COLUMN tenant_id SET NOT NULL;
+ALTER TABLE rfp_rules                 ALTER COLUMN tenant_id SET NOT NULL;
+ALTER TABLE rfp_law_references        ALTER COLUMN tenant_id SET NOT NULL;
+ALTER TABLE rfp_qualification_checks  ALTER COLUMN tenant_id SET NOT NULL;
+ALTER TABLE rfp_vrb_reviews           ALTER COLUMN tenant_id SET NOT NULL;
+ALTER TABLE rfp_vrb_dept_reviews      ALTER COLUMN tenant_id SET NOT NULL;
+ALTER TABLE rfp_profit_loss           ALTER COLUMN tenant_id SET NOT NULL;
+ALTER TABLE rfp_inhouse_members       ALTER COLUMN tenant_id SET NOT NULL;
+ALTER TABLE rfp_partners              ALTER COLUMN tenant_id SET NOT NULL;
+ALTER TABLE rfp_documents             ALTER COLUMN tenant_id SET NOT NULL;
+ALTER TABLE rfp_document_proof_items  ALTER COLUMN tenant_id SET NOT NULL;
+ALTER TABLE rfp_evaluation_criteria   ALTER COLUMN tenant_id SET NOT NULL;
+ALTER TABLE rfp_reference_table_items ALTER COLUMN tenant_id SET NOT NULL;
+ALTER TABLE rfp_proposals             ALTER COLUMN tenant_id SET NOT NULL;
+ALTER TABLE rfp_reference_table_exports ALTER COLUMN tenant_id SET NOT NULL;
+ALTER TABLE rfp_price_simulations     ALTER COLUMN tenant_id SET NOT NULL;
+ALTER TABLE rfp_bid_results           ALTER COLUMN tenant_id SET NOT NULL;
+ALTER TABLE rfp_negotiations          ALTER COLUMN tenant_id SET NOT NULL;
+ALTER TABLE rfp_contracts             ALTER COLUMN tenant_id SET NOT NULL;
+ALTER TABLE rfp_mail_logs             ALTER COLUMN tenant_id SET NOT NULL;
+ALTER TABLE rfp_risk_logs             ALTER COLUMN tenant_id SET NOT NULL;
+ALTER TABLE rfp_project_members       ALTER COLUMN tenant_id SET NOT NULL;
 
--- 7. tenant_id 인덱스 (22개 테이블)
-CREATE INDEX idx_projects_tenant            ON projects(tenant_id);
-CREATE INDEX idx_rfp_rules_tenant           ON rfp_rules(tenant_id);
-CREATE INDEX idx_law_refs_tenant            ON rfp_law_references(tenant_id);
-CREATE INDEX idx_qual_checks_tenant         ON qualification_checks(tenant_id);
-CREATE INDEX idx_vrb_reviews_tenant         ON vrb_reviews(tenant_id);
-CREATE INDEX idx_vrb_dept_reviews_tenant    ON vrb_dept_reviews(tenant_id);
-CREATE INDEX idx_profit_loss_tenant         ON profit_loss(tenant_id);
-CREATE INDEX idx_inhouse_members_tenant     ON inhouse_members(tenant_id);
-CREATE INDEX idx_partners_tenant            ON partners(tenant_id);
-CREATE INDEX idx_documents_tenant           ON documents(tenant_id);
-CREATE INDEX idx_doc_proof_items_tenant     ON document_proof_items(tenant_id);
-CREATE INDEX idx_eval_criteria_tenant       ON evaluation_criteria(tenant_id);
-CREATE INDEX idx_ref_table_items_tenant     ON reference_table_items(tenant_id);
-CREATE INDEX idx_proposals_tenant           ON proposals(tenant_id);
-CREATE INDEX idx_ref_table_exports_tenant   ON reference_table_exports(tenant_id);
-CREATE INDEX idx_price_simulations_tenant   ON price_simulations(tenant_id);
-CREATE INDEX idx_bid_results_tenant         ON bid_results(tenant_id);
-CREATE INDEX idx_negotiations_tenant        ON negotiations(tenant_id);
-CREATE INDEX idx_contracts_tenant           ON contracts(tenant_id);
-CREATE INDEX idx_mail_logs_tenant           ON mail_logs(tenant_id);
-CREATE INDEX idx_risk_logs_tenant           ON risk_logs(tenant_id);
-CREATE INDEX idx_project_members_tenant     ON rfp_project_members(tenant_id);
+-- 7. tenant_id 인덱스
+CREATE INDEX idx_rfp_projects_tenant            ON rfp_projects(tenant_id);
+CREATE INDEX idx_rfp_rules_tenant               ON rfp_rules(tenant_id);
+CREATE INDEX idx_rfp_law_refs_tenant            ON rfp_law_references(tenant_id);
+CREATE INDEX idx_rfp_qual_checks_tenant         ON rfp_qualification_checks(tenant_id);
+CREATE INDEX idx_rfp_vrb_reviews_tenant         ON rfp_vrb_reviews(tenant_id);
+CREATE INDEX idx_rfp_vrb_dept_reviews_tenant    ON rfp_vrb_dept_reviews(tenant_id);
+CREATE INDEX idx_rfp_profit_loss_tenant         ON rfp_profit_loss(tenant_id);
+CREATE INDEX idx_rfp_inhouse_members_tenant     ON rfp_inhouse_members(tenant_id);
+CREATE INDEX idx_rfp_partners_tenant            ON rfp_partners(tenant_id);
+CREATE INDEX idx_rfp_documents_tenant           ON rfp_documents(tenant_id);
+CREATE INDEX idx_rfp_doc_proof_items_tenant     ON rfp_document_proof_items(tenant_id);
+CREATE INDEX idx_rfp_eval_criteria_tenant       ON rfp_evaluation_criteria(tenant_id);
+CREATE INDEX idx_rfp_ref_table_items_tenant     ON rfp_reference_table_items(tenant_id);
+CREATE INDEX idx_rfp_proposals_tenant           ON rfp_proposals(tenant_id);
+CREATE INDEX idx_rfp_ref_table_exports_tenant   ON rfp_reference_table_exports(tenant_id);
+CREATE INDEX idx_rfp_price_simulations_tenant   ON rfp_price_simulations(tenant_id);
+CREATE INDEX idx_rfp_bid_results_tenant         ON rfp_bid_results(tenant_id);
+CREATE INDEX idx_rfp_negotiations_tenant        ON rfp_negotiations(tenant_id);
+CREATE INDEX idx_rfp_contracts_tenant           ON rfp_contracts(tenant_id);
+CREATE INDEX idx_rfp_mail_logs_tenant           ON rfp_mail_logs(tenant_id);
+CREATE INDEX idx_rfp_risk_logs_tenant           ON rfp_risk_logs(tenant_id);
+CREATE INDEX idx_rfp_project_members_tenant     ON rfp_project_members(tenant_id);
 
--- 8. Helper function: 현재 사용자의 tenant_id
+-- 8. Helper function
 CREATE OR REPLACE FUNCTION current_tenant_id() RETURNS UUID AS $$
   SELECT (auth.jwt() ->> 'tenant_id')::uuid;
 $$ LANGUAGE sql STABLE SECURITY DEFINER;
 
--- 9. RLS tenant_isolation 정책 (모든 테이블)
+-- 9. RLS tenant_isolation 정책
 DO $$
 DECLARE
   tbl TEXT;
 BEGIN
   FOR tbl IN
     SELECT unnest(ARRAY[
-      'projects', 'rfp_rules', 'rfp_law_references',
-      'qualification_checks', 'vrb_reviews', 'vrb_dept_reviews',
-      'profit_loss', 'inhouse_members', 'partners',
-      'documents', 'document_proof_items', 'evaluation_criteria',
-      'reference_table_items', 'proposals', 'reference_table_exports',
-      'price_simulations', 'bid_results', 'negotiations',
-      'contracts', 'mail_logs', 'risk_logs',
+      'rfp_projects', 'rfp_rules', 'rfp_law_references',
+      'rfp_qualification_checks', 'rfp_vrb_reviews', 'rfp_vrb_dept_reviews',
+      'rfp_profit_loss', 'rfp_inhouse_members', 'rfp_partners',
+      'rfp_documents', 'rfp_document_proof_items', 'rfp_evaluation_criteria',
+      'rfp_reference_table_items', 'rfp_proposals', 'rfp_reference_table_exports',
+      'rfp_price_simulations', 'rfp_bid_results', 'rfp_negotiations',
+      'rfp_contracts', 'rfp_mail_logs', 'rfp_risk_logs',
       'rfp_project_members'
     ])
   LOOP
