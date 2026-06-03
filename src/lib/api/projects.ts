@@ -73,25 +73,28 @@ export async function fetchProjectList(
     query = query.eq("phase", phase);
   }
 
-  const [projectsRes, completionRes, vrbRes] = await Promise.all([
-    query,
-    supabase.from("rfp_project_completion").select("*"),
-    supabase
-      .from("rfp_vrb_reviews")
-      .select("*")
-      .order("vrb_round", { ascending: false }),
-  ]);
+  // Projects query is critical — others are optional (may timeout on heavy views)
+  const projectsRes = await query;
 
   if (projectsRes.error) {
     return { rows: [], error: projectsRes.error.message };
   }
 
+  // Completion view and VRB are non-critical — fetch with timeout tolerance
+  const [completionRes, vrbRes] = await Promise.allSettled([
+    supabase.from("rfp_project_completion").select("*"),
+    supabase.from("rfp_vrb_reviews").select("*").order("vrb_round", { ascending: false }),
+  ]);
+
+  const completionData = completionRes.status === "fulfilled" ? (completionRes.value.data ?? []) : [];
+  const vrbData = vrbRes.status === "fulfilled" ? (vrbRes.value.data ?? []) : [];
+
   const completionMap = new Map(
-    ((completionRes.data ?? []) as ProjectCompletion[]).map((c) => [c.id, c]),
+    (completionData as ProjectCompletion[]).map((c) => [c.id, c]),
   );
 
   const vrbMap = new Map<string, VrbReview>();
-  for (const v of (vrbRes.data ?? []) as VrbReview[]) {
+  for (const v of vrbData as VrbReview[]) {
     if (!vrbMap.has(v.project_id)) vrbMap.set(v.project_id, v);
   }
 

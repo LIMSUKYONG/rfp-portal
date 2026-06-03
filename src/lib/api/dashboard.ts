@@ -59,14 +59,17 @@ export async function fetchDashboardData(): Promise<DashboardData> {
 
   const supabase = createAdminClient();
 
-  const [projectsRes, completionRes, risksRes] = await Promise.all([
+  // Projects and risks are critical; completion view may timeout
+  const [projectsRes, risksRes] = await Promise.all([
     supabase.from("rfp_projects").select("*").order("created_at", { ascending: false }),
-    supabase.from("rfp_project_completion").select("*"),
     supabase.from("rfp_risk_logs").select("*").eq("is_resolved", false).order("created_at", { ascending: false }),
   ]);
 
+  // Completion view is heavy (7-table JOIN) — fetch with error tolerance
+  const completionRes = await Promise.resolve(supabase.from("rfp_project_completion").select("*")).catch(() => ({ data: null, error: null }));
+
   const projects = (projectsRes.data ?? []) as Project[];
-  const completions = (completionRes.data ?? []) as ProjectCompletion[];
+  const completions = ((completionRes as { data: unknown[] | null }).data ?? []) as ProjectCompletion[];
   const risks = (risksRes.data ?? []) as RiskLog[];
 
   const now = Date.now();
