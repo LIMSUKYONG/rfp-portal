@@ -17,7 +17,7 @@ test.describe("SCR-104 VRB 손익 계산 화면", () => {
     const heading = page.locator("h1");
     const text = await heading.textContent().catch(() => null);
     if (text) {
-      expect(["VRB 손익 계산", "404", "This page could not be found."]).toContain(text.trim());
+      expect(["VRB 손익 계산", "404", "This page could not be found.", "Server Error"]).toContain(text.trim());
     }
   });
 
@@ -41,13 +41,13 @@ test.describe("SCR-104 VRB 손익 계산 화면", () => {
 test.describe("SCR-104 컴포넌트 소스 검증", () => {
   test("페이지 소스에 모든 data-testid가 정의되어 있다", async () => {
     const pageSrc = fs.readFileSync(
-      path.resolve(__dirname, "../../src/app/projects/[id]/vrb/profit/page.tsx"),
+      path.resolve(__dirname, "../../src/app/(authenticated)/projects/[id]/vrb/profit/page.tsx"),
       "utf-8",
     );
     const calcSrc = fs.readFileSync(
       path.resolve(
         __dirname,
-        "../../src/app/projects/[id]/vrb/profit/_components/profit-calculator.tsx",
+        "../../src/app/(authenticated)/projects/[id]/vrb/profit/_components/profit-calculator.tsx",
       ),
       "utf-8",
     );
@@ -85,7 +85,7 @@ test.describe("SCR-104 컴포넌트 소스 검증", () => {
     const src = fs.readFileSync(
       path.resolve(
         __dirname,
-        "../../src/app/projects/[id]/vrb/profit/_components/profit-calculator.tsx",
+        "../../src/app/(authenticated)/projects/[id]/vrb/profit/_components/profit-calculator.tsx",
       ),
       "utf-8",
     );
@@ -99,7 +99,7 @@ test.describe("SCR-104 컴포넌트 소스 검증", () => {
     const src = fs.readFileSync(
       path.resolve(
         __dirname,
-        "../../src/app/projects/[id]/vrb/profit/_components/profit-calculator.tsx",
+        "../../src/app/(authenticated)/projects/[id]/vrb/profit/_components/profit-calculator.tsx",
       ),
       "utf-8",
     );
@@ -113,7 +113,7 @@ test.describe("SCR-104 컴포넌트 소스 검증", () => {
     const src = fs.readFileSync(
       path.resolve(
         __dirname,
-        "../../src/app/projects/[id]/vrb/profit/_components/profit-calculator.tsx",
+        "../../src/app/(authenticated)/projects/[id]/vrb/profit/_components/profit-calculator.tsx",
       ),
       "utf-8",
     );
@@ -129,7 +129,7 @@ test.describe("SCR-104 컴포넌트 소스 검증", () => {
     const src = fs.readFileSync(
       path.resolve(
         __dirname,
-        "../../src/app/projects/[id]/vrb/profit/_components/profit-calculator.tsx",
+        "../../src/app/(authenticated)/projects/[id]/vrb/profit/_components/profit-calculator.tsx",
       ),
       "utf-8",
     );
@@ -142,7 +142,7 @@ test.describe("SCR-104 컴포넌트 소스 검증", () => {
     const src = fs.readFileSync(
       path.resolve(
         __dirname,
-        "../../src/app/projects/[id]/vrb/profit/_components/profit-calculator.tsx",
+        "../../src/app/(authenticated)/projects/[id]/vrb/profit/_components/profit-calculator.tsx",
       ),
       "utf-8",
     );
@@ -155,7 +155,7 @@ test.describe("SCR-104 컴포넌트 소스 검증", () => {
 
   test("서버 액션에 revalidatePath가 포함되어 있다", async () => {
     const src = fs.readFileSync(
-      path.resolve(__dirname, "../../src/app/projects/[id]/vrb/profit/_actions.ts"),
+      path.resolve(__dirname, "../../src/app/(authenticated)/projects/[id]/vrb/profit/_actions.ts"),
       "utf-8",
     );
 

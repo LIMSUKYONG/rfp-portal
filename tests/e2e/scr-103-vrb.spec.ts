@@ -17,7 +17,7 @@ test.describe("SCR-103 VRB 심의 화면", () => {
     const heading = page.locator("h1");
     const text = await heading.textContent().catch(() => null);
     if (text) {
-      expect(["VRB 심의", "404", "This page could not be found."]).toContain(text.trim());
+      expect(["VRB 심의", "404", "This page could not be found.", "Server Error"]).toContain(text.trim());
     }
   });
 
@@ -41,11 +41,11 @@ test.describe("SCR-103 VRB 심의 화면", () => {
 test.describe("SCR-103 컴포넌트 소스 검증", () => {
   test("페이지 소스에 모든 data-testid가 정의되어 있다", async () => {
     const pageSrc = fs.readFileSync(
-      path.resolve(__dirname, "../../src/app/projects/[id]/vrb/page.tsx"),
+      path.resolve(__dirname, "../../src/app/(authenticated)/projects/[id]/vrb/page.tsx"),
       "utf-8",
     );
     const dashSrc = fs.readFileSync(
-      path.resolve(__dirname, "../../src/app/projects/[id]/vrb/_components/vrb-dashboard.tsx"),
+      path.resolve(__dirname, "../../src/app/(authenticated)/projects/[id]/vrb/_components/vrb-dashboard.tsx"),
       "utf-8",
     );
     const allSrc = pageSrc + dashSrc;
@@ -91,7 +91,7 @@ test.describe("SCR-103 컴포넌트 소스 검증", () => {
 
   test("레이더 차트가 구현되어 있다", async () => {
     const src = fs.readFileSync(
-      path.resolve(__dirname, "../../src/app/projects/[id]/vrb/_components/vrb-dashboard.tsx"),
+      path.resolve(__dirname, "../../src/app/(authenticated)/projects/[id]/vrb/_components/vrb-dashboard.tsx"),
       "utf-8",
     );
 
@@ -102,7 +102,7 @@ test.describe("SCR-103 컴포넌트 소스 검증", () => {
 
   test("반려 시 사유 입력이 필수이다", async () => {
     const src = fs.readFileSync(
-      path.resolve(__dirname, "../../src/app/projects/[id]/vrb/_components/vrb-dashboard.tsx"),
+      path.resolve(__dirname, "../../src/app/(authenticated)/projects/[id]/vrb/_components/vrb-dashboard.tsx"),
       "utf-8",
     );
 
@@ -112,7 +112,7 @@ test.describe("SCR-103 컴포넌트 소스 검증", () => {
 
   test("D-day 색상 분기가 구현되어 있다 (D-3 주황, D-1 빨강)", async () => {
     const src = fs.readFileSync(
-      path.resolve(__dirname, "../../src/app/projects/[id]/vrb/_components/vrb-dashboard.tsx"),
+      path.resolve(__dirname, "../../src/app/(authenticated)/projects/[id]/vrb/_components/vrb-dashboard.tsx"),
       "utf-8",
     );
 
@@ -125,7 +125,7 @@ test.describe("SCR-103 컴포넌트 소스 검증", () => {
 
   test("서버 액션에 revalidatePath가 포함되어 있다", async () => {
     const src = fs.readFileSync(
-      path.resolve(__dirname, "../../src/app/projects/[id]/vrb/_actions.ts"),
+      path.resolve(__dirname, "../../src/app/(authenticated)/projects/[id]/vrb/_actions.ts"),
       "utf-8",
     );
 

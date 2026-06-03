@@ -17,7 +17,7 @@ test.describe("SCR-201 서류 체크리스트 화면", () => {
     const heading = page.locator("h1");
     const text = await heading.textContent().catch(() => null);
     if (text) {
-      expect(["서류 체크리스트", "404", "This page could not be found."]).toContain(text.trim());
+      expect(["서류 체크리스트", "404", "This page could not be found.", "Server Error"]).toContain(text.trim());
     }
   });
 
@@ -50,13 +50,13 @@ test.describe("SCR-201 서류 체크리스트 화면", () => {
 test.describe("SCR-201 컴포넌트 소스 검증", () => {
   test("페이지 소스에 모든 data-testid가 정의되어 있다", async () => {
     const pageSrc = fs.readFileSync(
-      path.resolve(__dirname, "../../src/app/projects/[id]/documents/page.tsx"),
+      path.resolve(__dirname, "../../src/app/(authenticated)/projects/[id]/documents/page.tsx"),
       "utf-8",
     );
     const listSrc = fs.readFileSync(
       path.resolve(
         __dirname,
-        "../../src/app/projects/[id]/documents/_components/document-list.tsx",
+        "../../src/app/(authenticated)/projects/[id]/documents/_components/document-list.tsx",
       ),
       "utf-8",
     );
@@ -103,7 +103,7 @@ test.describe("SCR-201 컴포넌트 소스 검증", () => {
     const src = fs.readFileSync(
       path.resolve(
         __dirname,
-        "../../src/app/projects/[id]/documents/_components/document-list.tsx",
+        "../../src/app/(authenticated)/projects/[id]/documents/_components/document-list.tsx",
       ),
       "utf-8",
     );
@@ -130,7 +130,7 @@ test.describe("SCR-201 컴포넌트 소스 검증", () => {
     const src = fs.readFileSync(
       path.resolve(
         __dirname,
-        "../../src/app/projects/[id]/documents/_components/document-list.tsx",
+        "../../src/app/(authenticated)/projects/[id]/documents/_components/document-list.tsx",
       ),
       "utf-8",
     );

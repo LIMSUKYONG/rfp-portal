@@ -67,8 +67,8 @@ test.describe("온보딩 소스 검증", () => {
   });
 
   test("팀원 초대 페이지 data-testid가 모두 정의되어 있다", async () => {
-    const p = fs.readFileSync(path.resolve(__dirname, "../../src/app/settings/invite/page.tsx"), "utf-8");
-    const c = fs.readFileSync(path.resolve(__dirname, "../../src/app/settings/invite/_components/invite-form.tsx"), "utf-8");
+    const p = fs.readFileSync(path.resolve(__dirname, "../../src/app/(authenticated)/settings/invite/page.tsx"), "utf-8");
+    const c = fs.readFileSync(path.resolve(__dirname, "../../src/app/(authenticated)/settings/invite/_components/invite-form.tsx"), "utf-8");
     const s = p + c;
     for (const tid of ["invite-page", "invite-name", "invite-email", "invite-role", "invite-submit", "team-list", "team-member-"]) {
       expect(s).toContain(tid);
@@ -83,12 +83,12 @@ test.describe("온보딩 소스 검증", () => {
 
   test("회사 가입이 signUp + register API를 호출한다", async () => {
     const s = fs.readFileSync(path.resolve(__dirname, "../../src/app/register/page.tsx"), "utf-8");
-    expect(s).toContain("signUp");
     expect(s).toContain("/api/tenants/register");
+    expect(s).toContain("signInWithPassword");
   });
 
   test("팀원 초대가 invite API를 호출한다", async () => {
-    const s = fs.readFileSync(path.resolve(__dirname, "../../src/app/settings/invite/_components/invite-form.tsx"), "utf-8");
+    const s = fs.readFileSync(path.resolve(__dirname, "../../src/app/(authenticated)/settings/invite/_components/invite-form.tsx"), "utf-8");
     expect(s).toContain("/api/tenants/invite");
   });
 });

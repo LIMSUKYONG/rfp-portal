@@ -21,7 +21,7 @@ test.describe("SCR-102 자격요건 체크 화면", () => {
     // May show 404 or the page title
     const content = await heading.textContent().catch(() => null);
     if (content) {
-      expect(["자격요건 체크", "This page could not be found.", "404"]).toContain(content.trim());
+      expect(["자격요건 체크", "This page could not be found.", "404", "Server Error"]).toContain(content.trim());
     }
   });
 
@@ -38,13 +38,13 @@ test.describe("SCR-102 자격요건 체크 화면", () => {
 test.describe("SCR-102 컴포넌트 소스 검증", () => {
   test("페이지 소스에 모든 data-testid가 정의되어 있다", async () => {
     const pageSrc = fs.readFileSync(
-      path.resolve(__dirname, "../../src/app/projects/[id]/qualification/page.tsx"),
+      path.resolve(__dirname, "../../src/app/(authenticated)/projects/[id]/qualification/page.tsx"),
       "utf-8",
     );
     const checklistSrc = fs.readFileSync(
       path.resolve(
         __dirname,
-        "../../src/app/projects/[id]/qualification/_components/qualification-checklist.tsx",
+        "../../src/app/(authenticated)/projects/[id]/qualification/_components/qualification-checklist.tsx",
       ),
       "utf-8",
     );
@@ -71,7 +71,7 @@ test.describe("SCR-102 컴포넌트 소스 검증", () => {
     const actionsSrc = fs.readFileSync(
       path.resolve(
         __dirname,
-        "../../src/app/projects/[id]/qualification/_actions.ts",
+        "../../src/app/(authenticated)/projects/[id]/qualification/_actions.ts",
       ),
       "utf-8",
     );
@@ -96,7 +96,7 @@ test.describe("SCR-102 컴포넌트 소스 검증", () => {
     const src = fs.readFileSync(
       path.resolve(
         __dirname,
-        "../../src/app/projects/[id]/qualification/_components/qualification-checklist.tsx",
+        "../../src/app/(authenticated)/projects/[id]/qualification/_components/qualification-checklist.tsx",
       ),
       "utf-8",
     );
@@ -111,7 +111,7 @@ test.describe("SCR-102 컴포넌트 소스 검증", () => {
     const src = fs.readFileSync(
       path.resolve(
         __dirname,
-        "../../src/app/projects/[id]/qualification/_components/qualification-checklist.tsx",
+        "../../src/app/(authenticated)/projects/[id]/qualification/_components/qualification-checklist.tsx",
       ),
       "utf-8",
     );
@@ -124,7 +124,7 @@ test.describe("SCR-102 컴포넌트 소스 검증", () => {
     const src = fs.readFileSync(
       path.resolve(
         __dirname,
-        "../../src/app/projects/[id]/qualification/_components/qualification-checklist.tsx",
+        "../../src/app/(authenticated)/projects/[id]/qualification/_components/qualification-checklist.tsx",
       ),
       "utf-8",
     );

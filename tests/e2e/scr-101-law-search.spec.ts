@@ -49,7 +49,7 @@ test.describe("SCR-101 법령 웹서치 검증", () => {
 
   test("SCR-101 페이지에 4단계 step indicator가 있다", async () => {
     const src = fs.readFileSync(
-      path.resolve(__dirname, "../../src/app/projects/new/page.tsx"),
+      path.resolve(__dirname, "../../src/app/(authenticated)/projects/new/page.tsx"),
       "utf-8",
     );
 
@@ -62,7 +62,7 @@ test.describe("SCR-101 법령 웹서치 검증", () => {
 
   test("SCR-101 페이지에 법령 검증 단계 UI가 있다", async () => {
     const src = fs.readFileSync(
-      path.resolve(__dirname, "../../src/app/projects/new/page.tsx"),
+      path.resolve(__dirname, "../../src/app/(authenticated)/projects/new/page.tsx"),
       "utf-8",
     );
 
@@ -73,7 +73,7 @@ test.describe("SCR-101 법령 웹서치 검증", () => {
 
   test("SCR-101 페이지에 법령 결과 표시 영역이 있다", async () => {
     const src = fs.readFileSync(
-      path.resolve(__dirname, "../../src/app/projects/new/page.tsx"),
+      path.resolve(__dirname, "../../src/app/(authenticated)/projects/new/page.tsx"),
       "utf-8",
     );
 

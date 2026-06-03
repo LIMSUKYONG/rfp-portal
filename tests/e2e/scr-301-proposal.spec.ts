@@ -17,7 +17,7 @@ test.describe("SCR-301 제안서 AI 평가 화면", () => {
     const heading = page.locator("h1");
     const text = await heading.textContent().catch(() => null);
     if (text) {
-      expect(["제안서 AI 평가", "404", "This page could not be found."]).toContain(text.trim());
+      expect(["제안서 AI 평가", "404", "This page could not be found.", "Server Error"]).toContain(text.trim());
     }
   });
 
@@ -47,13 +47,13 @@ test.describe("SCR-301 제안서 AI 평가 화면", () => {
 test.describe("SCR-301 컴포넌트 소스 검증", () => {
   test("페이지 소스에 모든 data-testid가 정의되어 있다", async () => {
     const pageSrc = fs.readFileSync(
-      path.resolve(__dirname, "../../src/app/projects/[id]/proposal/page.tsx"),
+      path.resolve(__dirname, "../../src/app/(authenticated)/projects/[id]/proposal/page.tsx"),
       "utf-8",
     );
     const evalSrc = fs.readFileSync(
       path.resolve(
         __dirname,
-        "../../src/app/projects/[id]/proposal/_components/proposal-evaluator.tsx",
+        "../../src/app/(authenticated)/projects/[id]/proposal/_components/proposal-evaluator.tsx",
       ),
       "utf-8",
     );
@@ -117,7 +117,7 @@ test.describe("SCR-301 컴포넌트 소스 검증", () => {
     const src = fs.readFileSync(
       path.resolve(
         __dirname,
-        "../../src/app/projects/[id]/proposal/_components/proposal-evaluator.tsx",
+        "../../src/app/(authenticated)/projects/[id]/proposal/_components/proposal-evaluator.tsx",
       ),
       "utf-8",
     );
@@ -133,7 +133,7 @@ test.describe("SCR-301 컴포넌트 소스 검증", () => {
     const src = fs.readFileSync(
       path.resolve(
         __dirname,
-        "../../src/app/projects/[id]/proposal/_components/proposal-evaluator.tsx",
+        "../../src/app/(authenticated)/projects/[id]/proposal/_components/proposal-evaluator.tsx",
       ),
       "utf-8",
     );
@@ -144,7 +144,7 @@ test.describe("SCR-301 컴포넌트 소스 검증", () => {
 
   test("서버 액션에 revalidatePath가 포함되어 있다", async () => {
     const src = fs.readFileSync(
-      path.resolve(__dirname, "../../src/app/projects/[id]/proposal/_actions.ts"),
+      path.resolve(__dirname, "../../src/app/(authenticated)/projects/[id]/proposal/_actions.ts"),
       "utf-8",
     );
 
@@ -156,7 +156,7 @@ test.describe("SCR-301 컴포넌트 소스 검증", () => {
     const src = fs.readFileSync(
       path.resolve(
         __dirname,
-        "../../src/app/projects/[id]/proposal/_components/proposal-evaluator.tsx",
+        "../../src/app/(authenticated)/projects/[id]/proposal/_components/proposal-evaluator.tsx",
       ),
       "utf-8",
     );

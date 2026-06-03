@@ -7,7 +7,7 @@ test.describe("SCR-201 증빙 AND/OR 조건 검증", () => {
     const src = fs.readFileSync(
       path.resolve(
         __dirname,
-        "../../src/app/projects/[id]/documents/_components/document-list.tsx",
+        "../../src/app/(authenticated)/projects/[id]/documents/_components/document-list.tsx",
       ),
       "utf-8",
     );
@@ -24,7 +24,7 @@ test.describe("SCR-201 증빙 AND/OR 조건 검증", () => {
     const src = fs.readFileSync(
       path.resolve(
         __dirname,
-        "../../src/app/projects/[id]/documents/_components/document-list.tsx",
+        "../../src/app/(authenticated)/projects/[id]/documents/_components/document-list.tsx",
       ),
       "utf-8",
     );
@@ -38,7 +38,7 @@ test.describe("SCR-201 증빙 AND/OR 조건 검증", () => {
     const src = fs.readFileSync(
       path.resolve(
         __dirname,
-        "../../src/app/projects/[id]/documents/_components/document-list.tsx",
+        "../../src/app/(authenticated)/projects/[id]/documents/_components/document-list.tsx",
       ),
       "utf-8",
     );
@@ -50,7 +50,7 @@ test.describe("SCR-201 증빙 AND/OR 조건 검증", () => {
     const src = fs.readFileSync(
       path.resolve(
         __dirname,
-        "../../src/app/projects/[id]/documents/_components/document-list.tsx",
+        "../../src/app/(authenticated)/projects/[id]/documents/_components/document-list.tsx",
       ),
       "utf-8",
     );
@@ -63,7 +63,7 @@ test.describe("SCR-201 증빙 AND/OR 조건 검증", () => {
     const src = fs.readFileSync(
       path.resolve(
         __dirname,
-        "../../src/app/projects/[id]/documents/_components/document-list.tsx",
+        "../../src/app/(authenticated)/projects/[id]/documents/_components/document-list.tsx",
       ),
       "utf-8",
     );
@@ -76,7 +76,7 @@ test.describe("SCR-201 증빙 AND/OR 조건 검증", () => {
     const src = fs.readFileSync(
       path.resolve(
         __dirname,
-        "../../src/app/projects/[id]/documents/_components/document-list.tsx",
+        "../../src/app/(authenticated)/projects/[id]/documents/_components/document-list.tsx",
       ),
       "utf-8",
     );
