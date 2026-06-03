@@ -1,6 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const MODEL_NAME = "gemini-1.5-pro";
+const MODEL_NAME = "gemini-1.5-flash";
 
 export function createGeminiModel() {
   const apiKey = process.env.GEMINI_API_KEY;
