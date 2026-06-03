@@ -83,3 +83,44 @@
 - 정보구조(IA) 설계, 컴포넌트 시스템 구축
 - 각 화면 UX 문제 진단 + 재설계
 - 경쟁 서비스 벤치마킹 후 차별화 전략 제안
+
+---
+
+## 2026-06-03 작업 현황
+
+### 완료된 작업
+- SCR-001 ~ SCR-503 전체 19개 화면 구현
+- 멀티테넌트 + 팀구조 (rfp_tenants, rfp_users)
+- AI Mock 모드 (USE_AI_MOCK=true/false)
+- Gemini API 전환 (gemini-2.5-flash)
+- RFP 섹션 분할 파싱 (4단계)
+- 파싱 후 태스크 자동 생성 (qualification_checks, documents, reference_table_items, risk_logs)
+- 완성률 계산 로직
+- 사이드바 레이아웃
+- superadmin 역할 (임석용)
+- 에이전트 추가: 철수(시니어백엔드), 나리(UX디자이너)
+
+### 미해결 버그 (내일 최우선)
+1. 프로젝트 목록 조회 안 됨
+   - DB에는 저장됨 (rfp_projects 2건 확인)
+   - tenant_id 맞춰짐 (d038ce86...)
+   - RLS 단순화 완료
+   - 원인: 서버 컴포넌트에서 tenant_id 조회 방식 문제
+   - 수정 방향: createAdminClient() + auth_uid로 tenant_id 조회 후 필터
+
+2. 저장 시 Default Tenant로 저장됨
+   - 저장 시 실제 사용자 tenant_id 대신 00000000... 로 저장
+   - 수정 필요: _actions.ts에서 현재 로그인 사용자 tenant_id 가져오는 로직
+
+### 내일 작업 순서
+1. 프로젝트 목록 조회 버그 수정 (철수)
+2. 저장 시 tenant_id 정확히 가져오기 (철수)
+3. 멀티 파일 업로드 UI (뽀동이)
+4. 나리 — 전체 UX 디자인 개선
+5. 실제 테스트 (파싱 → 저장 → 목록 → 상세)
+
+### 환경 설정
+- .env.local: USE_AI_MOCK=false, GEMINI_API_KEY 설정됨
+- Supabase RLS: rfp_users는 users_self_access 정책만
+- rfp_projects RLS: projects_access 정책 (tenant_id 또는 superadmin)
+- 임석용 계정: superadmin, tenant_id=d038ce86-0fd2-4b49-addd-8d7b5a4227a7
