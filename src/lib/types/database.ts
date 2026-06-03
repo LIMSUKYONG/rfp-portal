@@ -369,3 +369,39 @@ export interface Proposal {
   meets_threshold: boolean | null;
   created_at: string;
 }
+
+/* ── reference table ── */
+
+export interface ReferenceTableItem {
+  id: string;
+  project_id: string;
+  eval_criteria_id: string | null;
+  requirement_id: string | null;
+  requirement_category: string | null;
+  requirement_name: string;
+  impl_type: string | null;
+  impl_type_display: string | null;
+  proposal_page: string | null;
+  proposal_section: string | null;
+  description: string | null;
+  ai_mapped: boolean;
+  ai_confidence: number | null;
+  ai_mapped_at: string | null;
+  reviewed: boolean;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  sort_order: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ReferenceTableExport {
+  id: string;
+  project_id: string;
+  export_format: string | null;
+  file_url: string | null;
+  exported_by: string | null;
+  exported_at: string;
+  item_count: number | null;
+  reviewed_count: number | null;
+}

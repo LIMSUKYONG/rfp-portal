@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@/lib/supabase/server";
 import { saveProposalEvaluation } from "@/lib/api/proposals";
+import { mockProposalEvaluate } from "@/lib/ai/mock-responses";
 
 const PROPOSAL_BUCKET = "proposal-files";
 
@@ -53,6 +54,11 @@ export async function POST(request: NextRequest) {
       { error: "projectId와 storagePath가 필요합니다." },
       { status: 400 },
     );
+  }
+
+  // Mock mode
+  if (process.env.USE_AI_MOCK === "true") {
+    return NextResponse.json(mockProposalEvaluate);
   }
 
   const anthropicKey = process.env.ANTHROPIC_API_KEY;

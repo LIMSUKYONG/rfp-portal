@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@/lib/supabase/server";
+import { mockRfpParse } from "@/lib/ai/mock-responses";
 
 const RFP_BUCKET = "rfp-files";
 
@@ -98,6 +99,11 @@ export async function POST(request: NextRequest) {
       { error: "storagePath가 필요합니다." },
       { status: 400 },
     );
+  }
+
+  // Mock mode
+  if (process.env.USE_AI_MOCK === "true") {
+    return NextResponse.json(mockRfpParse);
   }
 
   const anthropicKey = process.env.ANTHROPIC_API_KEY;

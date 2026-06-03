@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@/lib/supabase/server";
 import { updateDocumentValidation } from "@/lib/api/documents";
+import { mockDocumentValidate } from "@/lib/ai/mock-responses";
 
 const DOC_BUCKET = "document-files";
 
@@ -39,6 +40,13 @@ export async function POST(request: NextRequest) {
       { error: "docId와 storagePath가 필요합니다." },
       { status: 400 },
     );
+  }
+
+  // Mock mode — cycle through different validation results
+  if (process.env.USE_AI_MOCK === "true") {
+    const cases = [mockDocumentValidate.valid, mockDocumentValidate.expiring_soon, mockDocumentValidate.needs_review];
+    const pick = cases[Math.floor(Math.random() * cases.length)];
+    return NextResponse.json(pick);
   }
 
   const anthropicKey = process.env.ANTHROPIC_API_KEY;
