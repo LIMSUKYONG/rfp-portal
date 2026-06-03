@@ -48,9 +48,20 @@ function calcDday(deadline: string | null): number | null {
   );
 }
 
+function isSupabaseConfigured(): boolean {
+  return !!(
+    process.env.NEXT_PUBLIC_SUPABASE_URL &&
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  );
+}
+
 export async function fetchProjectList(
   phase?: ProjectPhase | string,
 ): Promise<{ rows: ProjectListRow[]; error: string | null }> {
+  if (!isSupabaseConfigured()) {
+    return { rows: [], error: "Supabase가 설정되지 않았습니다. .env.local 파일을 확인하세요." };
+  }
+
   const supabase = createClient();
 
   let query = supabase
@@ -113,6 +124,8 @@ export interface ProjectDetail {
 export async function fetchProjectDetail(
   id: string,
 ): Promise<ProjectDetail | null> {
+  if (!isSupabaseConfigured()) return null;
+
   const supabase = createClient();
 
   const [
