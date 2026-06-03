@@ -336,3 +336,31 @@ export interface Partner {
   created_at: string;
   updated_at: string;
 }
+
+/* ── proposals ── */
+
+export interface Proposal {
+  id: string;
+  project_id: string;
+  version: number;
+  file_url: string | null;
+  file_size_mb: number | null;
+  uploaded_at: string | null;
+  ai_evaluated_at: string | null;
+  coverage_rate: number | null;
+  weak_items: Record<string, unknown>[] | null;
+  recommendations: Record<string, unknown>[] | null;
+  page_count: number | null;
+  format_valid: boolean | null;
+  format_issues: Record<string, unknown>[] | null;
+  has_reference_table: boolean | null;
+  has_glossary: boolean | null;
+  vague_expr_count: number | null;
+  qualitative_score: number | null;
+  quantitative_score: number | null;
+  tech_score_total: number | null;
+  threshold_pct: number | null;
+  threshold_score: number | null;
+  meets_threshold: boolean | null;
+  created_at: string;
+}
