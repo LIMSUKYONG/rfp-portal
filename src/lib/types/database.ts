@@ -237,6 +237,79 @@ export interface RfpParseResult {
   rules: RfpParsedRule[];
 }
 
+/* ── document proof items (with AND/OR conditions) ── */
+
+export type ProofConditionType = "AND" | "OR";
+
+export interface DocumentProofItem {
+  id: string;
+  document_id: string;
+  rfp_rule_id: string | null;
+  item_name: string;
+  item_section: string | null;
+  max_score: number | null;
+  condition_text: string | null;
+  fail_result: string | null;
+  proof_file_url: string | null;
+  proof_status: string;
+  calculated_score: number | null;
+  condition_type: ProofConditionType;
+  condition_group: number;
+  min_required: number;
+  condition_note: string | null;
+  needs_review: boolean;
+  created_at: string;
+}
+
+/* ── law references ── */
+
+export interface LawReference {
+  id: string;
+  project_id: string;
+  law_name: string;
+  law_number: string | null;
+  law_date: string | null;
+  law_url: string | null;
+  rfp_context: string | null;
+  research_status: string;
+  researched_at: string | null;
+  research_summary: string | null;
+  is_current?: boolean;
+  created_at: string;
+}
+
+/* ── parsed law from AI ── */
+
+export interface RfpParsedLaw {
+  law_name: string;
+  article: string | null;
+  content: string | null;
+  url: string | null;
+  is_current: boolean;
+  needs_review: boolean;
+}
+
+/* ── parsed document from AI ── */
+
+export interface RfpParsedDocument {
+  form_number: string | null;
+  doc_name: string;
+  submit_timing: string | null;
+  rfp_page: string | null;
+  condition_note: string | null;
+  proof_items: RfpParsedProofItem[];
+}
+
+export interface RfpParsedProofItem {
+  item_name: string;
+  condition_type: ProofConditionType;
+  condition_group: number;
+  min_required: number;
+  issuing_org: string | null;
+  validity_days: number | null;
+  needs_review: boolean;
+}
+
 export type PartnerType = "consortium" | "subcontract" | "goods_supply" | "direct_purchase";
 
 export interface Partner {

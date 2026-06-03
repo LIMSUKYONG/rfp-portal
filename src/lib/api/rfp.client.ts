@@ -5,16 +5,14 @@
 import type {
   RfpParsedProjectInfo,
   RfpParsedRule,
+  RfpParsedDocument,
+  RfpParsedLaw,
 } from "@/lib/types/database";
 
 const RFP_BUCKET = "rfp-files";
 
 /* ── upload (browser-side) ── */
 
-/**
- * Upload a PDF to Supabase Storage using a signed URL.
- * Runs entirely in the browser → bypasses the Vercel 4.5 MB body limit.
- */
 export async function uploadRfpFile(
   supabaseUrl: string,
   supabaseKey: string,
@@ -72,8 +70,21 @@ export async function uploadRfpFile(
 export interface ParseRfpResponse {
   projectInfo: RfpParsedProjectInfo;
   rules: RfpParsedRule[];
+  documents: RfpParsedDocument[];
+  laws: RfpParsedLaw[];
   error?: string;
 }
+
+const EMPTY_RESPONSE: ParseRfpResponse = {
+  projectInfo: {
+    name: null, client: null, budget_amount: null, bid_deadline: null,
+    project_type: null, category: null, contract_method: null,
+    project_period: null, warranty_period: null,
+  },
+  rules: [],
+  documents: [],
+  laws: [],
+};
 
 export async function parseRfp(storagePath: string): Promise<ParseRfpResponse> {
   const res = await fetch("/api/rfp/parse", {
@@ -84,16 +95,15 @@ export async function parseRfp(storagePath: string): Promise<ParseRfpResponse> {
 
   if (!res.ok) {
     const text = await res.text();
-    return {
-      projectInfo: {
-        name: null, client: null, budget_amount: null, bid_deadline: null,
-        project_type: null, category: null, contract_method: null,
-        project_period: null, warranty_period: null,
-      },
-      rules: [],
-      error: `파싱 실패 (${res.status}): ${text}`,
-    };
+    return { ...EMPTY_RESPONSE, error: `파싱 실패 (${res.status}): ${text}` };
   }
 
-  return res.json() as Promise<ParseRfpResponse>;
+  const data = await res.json();
+  return {
+    projectInfo: data.projectInfo ?? EMPTY_RESPONSE.projectInfo,
+    rules: data.rules ?? [],
+    documents: data.documents ?? [],
+    laws: data.laws ?? [],
+    error: data.error,
+  };
 }

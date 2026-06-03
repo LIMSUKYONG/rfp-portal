@@ -136,7 +136,7 @@ test.describe("SCR-201 컴포넌트 소스 검증", () => {
     );
 
     expect(src).toContain("projectId: string");
-    expect(src).toContain("documents: DocumentRow[]");
+    expect(src).toContain("documents: DocumentWithProofs[]");
     expect(src).toContain("documentPct: number");
     expect(src).toContain("checklistExtras: RfpChecklistExtra[]");
   });

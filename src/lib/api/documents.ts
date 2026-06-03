@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import type {
   Document,
+  DocumentProofItem,
   RfpRule,
   ProjectCompletion,
 } from "@/lib/types/database";
@@ -19,8 +20,12 @@ export interface DocumentRow extends Document {
   source_type: string | null;
 }
 
+export interface DocumentWithProofs extends DocumentRow {
+  proofItems: DocumentProofItem[];
+}
+
 export interface DocumentsData {
-  documents: DocumentRow[];
+  documents: DocumentWithProofs[];
   documentPct: number;
   checklistExtras: RfpChecklistExtra[];
   error: string | null;
@@ -50,7 +55,7 @@ export async function fetchDocuments(
 
   const supabase = createClient();
 
-  const [docsRes, rulesRes, completionRes, extrasRes] = await Promise.all([
+  const [docsRes, rulesRes, completionRes, extrasRes, proofsRes] = await Promise.all([
     supabase
       .from("documents")
       .select("*")
@@ -70,21 +75,33 @@ export async function fetchDocuments(
       .select("id, rule_type, rule_target, source_text, source_page")
       .eq("project_id", projectId)
       .in("rule_type", CHECKLIST_RULE_TYPES),
+    supabase
+      .from("document_proof_items")
+      .select("*")
+      .order("condition_group", { ascending: true }),
   ]);
 
   const docs = (docsRes.data ?? []) as Document[];
   const rules = (rulesRes.data ?? []) as Pick<RfpRule, "id" | "source_page" | "source_type">[];
   const documentPct = (completionRes.data?.document_pct as number) ?? 0;
   const extras = (extrasRes.data ?? []) as RfpChecklistExtra[];
+  const allProofs = (proofsRes.data ?? []) as DocumentProofItem[];
 
   const ruleMap = new Map(rules.map((r) => [r.id, r]));
+  const proofsByDoc = new Map<string, DocumentProofItem[]>();
+  for (const p of allProofs) {
+    const list = proofsByDoc.get(p.document_id) ?? [];
+    list.push(p);
+    proofsByDoc.set(p.document_id, list);
+  }
 
-  const documents: DocumentRow[] = docs.map((d) => {
+  const documents: DocumentWithProofs[] = docs.map((d) => {
     const rule = d.rfp_rule_id ? ruleMap.get(d.rfp_rule_id) : undefined;
     return {
       ...d,
       source_page: rule?.source_page ?? null,
       source_type: rule?.source_type ?? null,
+      proofItems: proofsByDoc.get(d.id) ?? [],
     };
   });
 
