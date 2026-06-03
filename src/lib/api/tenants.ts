@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 function isSupabaseConfigured(): boolean {
   return !!(
@@ -41,7 +41,7 @@ export async function registerTenant(input: {
 }): Promise<{ tenantId: string; userId: string; error: string | null }> {
   if (!isSupabaseConfigured()) return { tenantId: "", userId: "", error: "Supabase 미설정" };
 
-  const supabase = createClient();
+  const supabase = createAdminClient();
 
   const { data: tenant, error: tenantErr } = await supabase
     .from("rfp_tenants")
@@ -53,6 +53,12 @@ export async function registerTenant(input: {
     return { tenantId: "", userId: "", error: tenantErr?.message ?? "테넌트 생성 실패" };
   }
 
+  // First user in the system gets superadmin, otherwise pm
+  const { count } = await supabase
+    .from("rfp_users")
+    .select("id", { count: "exact", head: true });
+  const role = (count ?? 0) === 0 ? "superadmin" : "pm";
+
   const { data: user, error: userErr } = await supabase
     .from("rfp_users")
     .insert({
@@ -60,7 +66,7 @@ export async function registerTenant(input: {
       tenant_id: tenant.id as string,
       email: input.pmEmail,
       name: input.pmName,
-      role: "pm",
+      role,
     })
     .select("id")
     .single();
@@ -79,7 +85,7 @@ export async function inviteMember(input: {
 }): Promise<{ userId: string; error: string | null }> {
   if (!isSupabaseConfigured()) return { userId: "", error: "Supabase 미설정" };
 
-  const supabase = createClient();
+  const supabase = createAdminClient();
 
   const { data: user, error } = await supabase
     .from("rfp_users")
@@ -104,7 +110,7 @@ export async function fetchTeamMembers(
 ): Promise<{ members: AppUser[]; error: string | null }> {
   if (!isSupabaseConfigured()) return { members: [], error: "Supabase 미설정" };
 
-  const supabase = createClient();
+  const supabase = createAdminClient();
   const { data, error } = await supabase
     .from("rfp_users")
     .select("*")

@@ -6,7 +6,7 @@ export default defineConfig({
     include: ["tests/integration/**/*.test.ts"],
     env: { ...require("dotenv").config({ path: ".env.local" }).parsed },
     testTimeout: 30000,
-    sequence: { sequential: true },
+    fileParallelism: false,
   },
   resolve: {
     alias: {
