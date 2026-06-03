@@ -430,3 +430,80 @@ export interface ReferenceTableExport {
   item_count: number | null;
   reviewed_count: number | null;
 }
+
+/* ── price simulations ── */
+
+export interface PriceSimulation {
+  id: string;
+  project_id: string;
+  tech_score: number | null;
+  budget_amount: number | null;
+  price_formula: Record<string, unknown> | null;
+  negotiation_rules: Record<string, unknown> | null;
+  scenarios: Record<string, unknown>[] | null;
+  competitor_tech_score: number | null;
+  min_win_price: number | null;
+  selected_price: number | null;
+  selected_at: string | null;
+  selected_by: string | null;
+  created_at: string;
+}
+
+/* ── bid results ── */
+
+export interface BidResult {
+  id: string;
+  project_id: string;
+  submitted_price: number | null;
+  submitted_at: string | null;
+  result_type: string | null;
+  actual_tech_score: number | null;
+  actual_price_score: number | null;
+  actual_total_score: number | null;
+  rank: number | null;
+  predicted_tech_score: number | null;
+  score_diff: number | null;
+  loss_reason: string | null;
+  loss_note: string | null;
+  notified_at: string | null;
+  created_at: string;
+}
+
+/* ── negotiations ── */
+
+export interface Negotiation {
+  id: string;
+  project_id: string;
+  negotiation_round: number;
+  negotiation_date: string | null;
+  deadline: string | null;
+  negotiation_status: string | null;
+  scope_changes: string | null;
+  price_changes: string | null;
+  final_amount: number | null;
+  rejection_reason: string | null;
+  created_at: string;
+}
+
+/* ── contracts ── */
+
+export interface Contract {
+  id: string;
+  project_id: string;
+  contract_number: string | null;
+  contract_amount: number | null;
+  contract_date: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  warranty_end_date: string | null;
+  advance_rate: number | null;
+  advance_amount: number | null;
+  interim_rate: number | null;
+  interim_amount: number | null;
+  final_rate: number | null;
+  final_amount: number | null;
+  contract_file_url: string | null;
+  contract_file_size_mb: number | null;
+  registered_as_experience: boolean;
+  created_at: string;
+}
