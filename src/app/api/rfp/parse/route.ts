@@ -133,13 +133,19 @@ JSON만 출력.`,
 export async function POST(request: NextRequest) {
   const body = (await request.json()) as {
     storagePath?: string;
-    step?: string; // "general" | "documents" | "requirements" | "conditions" | "all"
+    filePaths?: string[];
+    roles?: string[];
+    step?: string;
   };
 
-  const { storagePath, step = "all" } = body;
+  // Support both single and multi-file
+  const storagePath = body.storagePath ?? body.filePaths?.[0];
+  const filePaths = body.filePaths ?? (body.storagePath ? [body.storagePath] : []);
+  const roles = body.roles ?? ["bid_notice"];
+  const step = body.step ?? "all";
 
-  if (!storagePath) {
-    return NextResponse.json({ error: "storagePath가 필요합니다." }, { status: 400 });
+  if (filePaths.length === 0) {
+    return NextResponse.json({ error: "파일 경로가 필요합니다." }, { status: 400 });
   }
 
   // Mock mode
@@ -147,27 +153,44 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(mockRfpParse);
   }
 
-  // Download PDF
+  // Download PDFs — map role to base64
   const supabase = createAdminClient();
-  const { data: fileData, error: downloadError } = await supabase.storage
-    .from(RFP_BUCKET)
-    .download(storagePath);
+  const pdfMap: Record<string, string> = {};
 
-  if (downloadError || !fileData) {
-    return NextResponse.json(
-      { error: `PDF 다운로드 실패: ${downloadError?.message ?? "파일 없음"}` },
-      { status: 500 },
-    );
+  const bidNoticeIdx = roles.indexOf("bid_notice");
+  const requirementsIdx = roles.indexOf("requirements");
+
+  for (let i = 0; i < filePaths.length; i++) {
+    const { data: fileData, error: dlErr } = await supabase.storage
+      .from(RFP_BUCKET)
+      .download(filePaths[i]);
+
+    if (dlErr || !fileData) {
+      return NextResponse.json({ error: `PDF 다운로드 실패: ${dlErr?.message ?? filePaths[i]}` }, { status: 500 });
+    }
+
+    const buf = await fileData.arrayBuffer();
+    pdfMap[roles[i]] = Buffer.from(buf).toString("base64");
   }
 
-  const arrayBuffer = await fileData.arrayBuffer();
-  const base64 = Buffer.from(arrayBuffer).toString("base64");
+  // Fallback: use first file for any missing role
+  const bidBase64 = pdfMap["bid_notice"] ?? Object.values(pdfMap)[0];
+  const reqBase64 = pdfMap["requirements"] ?? bidBase64;
+
+  // Which PDF for which step
+  const stepPdf: Record<string, string> = {
+    general: bidBase64,
+    documents: bidBase64,
+    requirements: reqBase64,
+    conditions: bidBase64,
+  };
 
   // Single step
   if (step !== "all" && PROMPTS[step]) {
     try {
       const prompt = PROMPTS[step];
-      const jsonStr = await geminiPdfToJson(base64, "application/pdf", prompt.system, prompt.user);
+      const pdf = stepPdf[step] ?? bidBase64;
+      const jsonStr = await geminiPdfToJson(pdf, "application/pdf", prompt.system, prompt.user);
       return NextResponse.json(JSON.parse(jsonStr));
     } catch (err) {
       return NextResponse.json({ error: err instanceof Error ? err.message : "AI 호출 실패" }, { status: 500 });
@@ -176,23 +199,23 @@ export async function POST(request: NextRequest) {
 
   // All steps sequentially
   try {
-    const results: Record<string, unknown> = {};
+    const allRules: unknown[] = [];
+    const merged: Record<string, unknown> = {};
 
     for (const key of ["general", "documents", "requirements", "conditions"] as const) {
       const prompt = PROMPTS[key];
-      const jsonStr = await geminiPdfToJson(base64, "application/pdf", prompt.system, prompt.user);
+      const pdf = stepPdf[key];
+      const jsonStr = await geminiPdfToJson(pdf, "application/pdf", prompt.system, prompt.user);
       const parsed = JSON.parse(jsonStr);
-      Object.assign(results, parsed);
 
-      // Merge rules arrays
-      if (parsed.rules && results.rules) {
-        if (key !== "general") {
-          (results.rules as unknown[]).push(...(parsed.rules as unknown[]));
-        }
-      }
+      if (parsed.projectInfo) merged.projectInfo = parsed.projectInfo;
+      if (parsed.documents) merged.documents = parsed.documents;
+      if (parsed.laws) merged.laws = parsed.laws;
+      if (Array.isArray(parsed.rules)) allRules.push(...(parsed.rules as unknown[]));
     }
 
-    return NextResponse.json(results);
+    merged.rules = allRules;
+    return NextResponse.json(merged);
   } catch (err) {
     return NextResponse.json({ error: err instanceof Error ? err.message : "AI 호출 실패" }, { status: 500 });
   }

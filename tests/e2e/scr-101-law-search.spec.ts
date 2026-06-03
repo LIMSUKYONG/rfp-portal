@@ -46,41 +46,37 @@ test.describe("SCR-101 법령 웹서치 검증", () => {
     expect(src).toContain("laws: RfpParsedLaw[]");
   });
 
-  test("SCR-101 페이지에 4단계 step indicator가 있다", async () => {
+  test("SCR-101 페이지에 파싱 진행 표시가 있다", async () => {
     const src = fs.readFileSync(
       path.resolve(__dirname, "../../src/app/(authenticated)/projects/new/page.tsx"),
       "utf-8",
     );
 
-    expect(src).toContain("step-indicator");
-    expect(src).toContain("PDF 업로드");
-    expect(src).toContain("AI 파싱");
-    expect(src).toContain("법령 검증");
-    expect(src).toContain("확인 및 저장");
+    expect(src).toContain("parseMsg");
+    expect(src).toContain("parse-spinner");
+    expect(src).toContain("분석 중");
   });
 
-  test("SCR-101 페이지에 법령 검증 단계 UI가 있다", async () => {
+  test("SCR-101 페이지에 멀티파일 업로드가 있다", async () => {
     const src = fs.readFileSync(
       path.resolve(__dirname, "../../src/app/(authenticated)/projects/new/page.tsx"),
       "utf-8",
     );
 
-    expect(src).toContain("law-search-step");
-    expect(src).toContain("법령");
-    expect(src).toContain("확인 중");
+    expect(src).toContain("file-list");
+    expect(src).toContain("bid_notice");
+    expect(src).toContain("requirements");
+    expect(src).toContain("parseRfpMulti");
   });
 
-  test("SCR-101 페이지에 법령 결과 표시 영역이 있다", async () => {
+  test("SCR-101 저장 시 documents와 laws를 전달한다", async () => {
     const src = fs.readFileSync(
       path.resolve(__dirname, "../../src/app/(authenticated)/projects/new/page.tsx"),
       "utf-8",
     );
 
-    expect(src).toContain("law-results");
-    expect(src).toContain("law-stale-warning");
-    expect(src).toContain("law-row-");
-    expect(src).toContain("현행");
-    expect(src).toContain("확인필요");
+    expect(src).toContain("documents: parsedDocs");
+    expect(src).toContain("laws");
   });
 
   test("타입에 LawReference와 RfpParsedLaw가 정의되어 있다", async () => {

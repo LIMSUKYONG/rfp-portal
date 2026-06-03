@@ -90,11 +90,15 @@ export const PARSE_STEPS: { key: ParseStep; label: string }[] = [
   { key: "conditions", label: "4/4 제안조건 분석 중..." },
 ];
 
-async function parseStep(storagePath: string, step: ParseStep): Promise<Record<string, unknown>> {
+async function parseStep(
+  filePaths: string[],
+  roles: string[],
+  step: ParseStep,
+): Promise<Record<string, unknown>> {
   const res = await fetch("/api/rfp/parse", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ storagePath, step }),
+    body: JSON.stringify({ filePaths, roles, step }),
   });
 
   if (!res.ok) {
@@ -108,8 +112,24 @@ async function parseStep(storagePath: string, step: ParseStep): Promise<Record<s
 /**
  * Parse RFP in 4 sequential steps with progress callback.
  */
+/**
+ * Parse single RFP file (backward compatible).
+ */
 export async function parseRfp(
   storagePath: string,
+  onStep?: (step: ParseStep, label: string) => void,
+): Promise<ParseRfpResponse> {
+  return parseRfpMulti([storagePath], ["bid_notice"], onStep);
+}
+
+/**
+ * Parse multiple RFP files with role-based routing.
+ * bid_notice → general + documents + conditions steps
+ * requirements → requirements step
+ */
+export async function parseRfpMulti(
+  filePaths: string[],
+  roles: string[],
   onStep?: (step: ParseStep, label: string) => void,
 ): Promise<ParseRfpResponse> {
   const merged: Record<string, unknown> = {};
@@ -118,17 +138,12 @@ export async function parseRfp(
   try {
     for (const { key, label } of PARSE_STEPS) {
       onStep?.(key, label);
-      const result = await parseStep(storagePath, key);
+      const result = await parseStep(filePaths, roles, key);
 
-      // Merge top-level fields
       if (result.projectInfo) merged.projectInfo = result.projectInfo;
       if (result.documents) merged.documents = result.documents;
       if (result.laws) merged.laws = result.laws;
-
-      // Accumulate rules from all steps
-      if (Array.isArray(result.rules)) {
-        allRules.push(...(result.rules as unknown[]));
-      }
+      if (Array.isArray(result.rules)) allRules.push(...(result.rules as unknown[]));
     }
   } catch (err) {
     return { ...EMPTY_RESPONSE, error: err instanceof Error ? err.message : "파싱 실패" };
