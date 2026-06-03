@@ -2,6 +2,9 @@ import { fetchProjectList } from "@/lib/api/projects";
 import { PhaseFilter } from "./_components/phase-filter";
 import { ProjectTable } from "./_components/project-table";
 
+// Disable Next.js cache — always fetch fresh data
+export const dynamic = "force-dynamic";
+
 interface Props {
   searchParams: { phase?: string };
 }
