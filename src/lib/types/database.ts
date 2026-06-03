@@ -84,12 +84,16 @@ export interface VrbReview {
   risk_level_avg: number | null;
   risk_grade: string | null;
   strategic_reason: string | null;
+  lukas_submitted: boolean;
+  lukas_submitted_at: string | null;
   created_at: string;
+  updated_at: string;
 }
 
 export interface ProfitLoss {
   id: string;
   project_id: string;
+  vrb_id: string | null;
   proposal_price: number | null;
   expected_price: number | null;
   license_cost: number;
@@ -104,6 +108,7 @@ export interface ProfitLoss {
   pjt_profit: number;
   target_margin_rate: number | null;
   pjt_profit_rate: number;
+  updated_at: string;
 }
 
 export interface RiskLog {
