@@ -13,6 +13,7 @@ import type { ProjectPhase } from "@/lib/types/database";
 const PHASE_OPTIONS: { value: ProjectPhase | "all"; label: string }[] = [
   { value: "all", label: "전체 단계" },
   { value: "rfp_registered", label: "RFP 등록" },
+  { value: "qualification_check", label: "적격 심사" },
   { value: "in_progress", label: "진행 중" },
   { value: "track_a_done", label: "트랙A 완료" },
   { value: "vrb_approved", label: "VRB 승인" },

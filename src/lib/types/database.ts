@@ -2,6 +2,7 @@
 
 export type ProjectPhase =
   | "rfp_registered"
+  | "qualification_check"
   | "in_progress"
   | "track_a_done"
   | "vrb_approved"

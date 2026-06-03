@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -17,19 +16,11 @@ import {
   computeDday,
   formatKrw,
 } from "@/lib/constants/phase";
-import type {
-  Project,
-  ProjectCompletion,
-  VrbReview,
-  ProfitLoss,
-  RiskLog,
-  QualificationCheck,
-  Document,
-  Partner,
-} from "@/lib/types/database";
+import { fetchProjectDetail } from "@/lib/api/projects";
+import type { ProjectDetail } from "@/lib/api/projects";
 
-/* ── helpers ── */
-function pctBar(label: string, value: number | null, testId: string) {
+/* ── small presentation helpers ── */
+function PctBar({ label, value, testId }: { label: string; value: number | null; testId: string }) {
   const pct = value ?? 0;
   return (
     <div data-testid={testId}>
@@ -47,7 +38,7 @@ function pctBar(label: string, value: number | null, testId: string) {
   );
 }
 
-function infoRow(label: string, value: string | null | undefined) {
+function InfoRow({ label, value }: { label: string; value: string | null | undefined }) {
   return (
     <div className="flex justify-between border-b border-dashed py-2 last:border-0">
       <span className="text-sm text-muted-foreground">{label}</span>
@@ -87,66 +78,19 @@ interface Props {
 }
 
 export default async function ProjectDetailPage({ params }: Props) {
-  const supabase = createClient();
-  const projectId = params.id;
+  const detail = await fetchProjectDetail(params.id);
+  if (!detail) notFound();
 
-  const [
-    projectRes,
-    completionRes,
-    vrbRes,
-    plRes,
-    riskRes,
-    qualRes,
-    docRes,
-    partnerRes,
-  ] = await Promise.all([
-    supabase.from("projects").select("*").eq("id", projectId).single(),
-    supabase.from("project_completion").select("*").eq("id", projectId).single(),
-    supabase
-      .from("vrb_reviews")
-      .select("*")
-      .eq("project_id", projectId)
-      .order("vrb_round", { ascending: false }),
-    supabase
-      .from("profit_loss")
-      .select("*")
-      .eq("project_id", projectId)
-      .order("updated_at", { ascending: false })
-      .limit(1),
-    supabase
-      .from("risk_logs")
-      .select("*")
-      .eq("project_id", projectId)
-      .eq("is_resolved", false)
-      .order("created_at", { ascending: false }),
-    supabase
-      .from("qualification_checks")
-      .select("*")
-      .eq("project_id", projectId)
-      .order("created_at", { ascending: true }),
-    supabase
-      .from("documents")
-      .select("*")
-      .eq("project_id", projectId)
-      .order("created_at", { ascending: true }),
-    supabase
-      .from("partners")
-      .select("*")
-      .eq("project_id", projectId)
-      .order("created_at", { ascending: true }),
-  ]);
-
-  if (projectRes.error || !projectRes.data) notFound();
-
-  const project = projectRes.data as Project;
-  const completion = (completionRes.data ?? null) as ProjectCompletion | null;
-  const vrbList = (vrbRes.data ?? []) as VrbReview[];
-  const latestVrb = vrbList[0] ?? null;
-  const pl = ((plRes.data ?? [])[0] ?? null) as ProfitLoss | null;
-  const risks = (riskRes.data ?? []) as RiskLog[];
-  const quals = (qualRes.data ?? []) as QualificationCheck[];
-  const docs = (docRes.data ?? []) as Document[];
-  const partners = (partnerRes.data ?? []) as Partner[];
+  const {
+    project,
+    completion,
+    latestVrb,
+    profitLoss: pl,
+    risks,
+    qualifications: quals,
+    documents: docs,
+    partners,
+  } = detail;
 
   const dday = computeDday(project.bid_deadline);
 
@@ -197,17 +141,17 @@ export default async function ProjectDetailPage({ params }: Props) {
             <CardTitle className="text-base">기본 정보</CardTitle>
           </CardHeader>
           <CardContent className="space-y-0">
-            {infoRow("발주처", project.client)}
-            {infoRow("사업 유형", project.project_type)}
-            {infoRow("분류", project.category)}
-            {infoRow("사업 예산", project.budget_amount != null ? formatKrw(project.budget_amount) : null)}
-            {infoRow("계약 방식", project.contract_method)}
-            {infoRow("입찰 마감", project.bid_deadline)}
-            {infoRow("공고일", project.announcement_date)}
-            {infoRow("사업 기간", project.project_period)}
-            {infoRow("하자보수 기간", project.warranty_period)}
-            {infoRow("영업 담당", project.sales_rep)}
-            {infoRow("PM", project.pm)}
+            <InfoRow label="발주처" value={project.client} />
+            <InfoRow label="사업 유형" value={project.project_type} />
+            <InfoRow label="분류" value={project.category} />
+            <InfoRow label="사업 예산" value={project.budget_amount != null ? formatKrw(project.budget_amount) : null} />
+            <InfoRow label="계약 방식" value={project.contract_method} />
+            <InfoRow label="입찰 마감" value={project.bid_deadline} />
+            <InfoRow label="공고일" value={project.announcement_date} />
+            <InfoRow label="사업 기간" value={project.project_period} />
+            <InfoRow label="하자보수 기간" value={project.warranty_period} />
+            <InfoRow label="영업 담당" value={project.sales_rep} />
+            <InfoRow label="PM" value={project.pm} />
           </CardContent>
         </Card>
 
@@ -217,10 +161,10 @@ export default async function ProjectDetailPage({ params }: Props) {
             <CardTitle className="text-base">트랙A 진행 현황</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {pctBar("적격 심사", completion?.qualification_pct ?? null, "pct-qualification")}
-            {pctBar("서류 검증", completion?.document_pct ?? null, "pct-document")}
-            {pctBar("협력사 관리", completion?.partner_pct ?? null, "pct-partner")}
-            {pctBar("대비표 검토", completion?.ref_table_pct ?? null, "pct-ref-table")}
+            <PctBar label="적격 심사" value={completion?.qualification_pct ?? null} testId="pct-qualification" />
+            <PctBar label="서류 검증" value={completion?.document_pct ?? null} testId="pct-document" />
+            <PctBar label="협력사 관리" value={completion?.partner_pct ?? null} testId="pct-partner" />
+            <PctBar label="대비표 검토" value={completion?.ref_table_pct ?? null} testId="pct-ref-table" />
           </CardContent>
         </Card>
 
@@ -232,25 +176,25 @@ export default async function ProjectDetailPage({ params }: Props) {
           <CardContent>
             {latestVrb ? (
               <div className="space-y-0">
-                {infoRow("회차", `${latestVrb.vrb_round}차`)}
-                {infoRow("유형", latestVrb.vrb_type)}
-                {infoRow("심의 마감", latestVrb.vrb_deadline)}
-                {infoRow("회의일", latestVrb.meeting_date)}
-                {infoRow(
-                  "진행 여부",
-                  latestVrb.vrb_proceed === true
-                    ? "승인"
-                    : latestVrb.vrb_proceed === false
-                      ? "반려"
-                      : "대기",
-                )}
-                {infoRow("리스크 등급", latestVrb.risk_grade)}
-                {infoRow(
-                  "리스크 평균",
-                  latestVrb.risk_level_avg != null
-                    ? `${latestVrb.risk_level_avg}`
-                    : null,
-                )}
+                <InfoRow label="회차" value={`${latestVrb.vrb_round}차`} />
+                <InfoRow label="유형" value={latestVrb.vrb_type} />
+                <InfoRow label="심의 마감" value={latestVrb.vrb_deadline} />
+                <InfoRow label="회의일" value={latestVrb.meeting_date} />
+                <InfoRow
+                  label="진행 여부"
+                  value={
+                    latestVrb.vrb_proceed === true
+                      ? "승인"
+                      : latestVrb.vrb_proceed === false
+                        ? "반려"
+                        : "대기"
+                  }
+                />
+                <InfoRow label="리스크 등급" value={latestVrb.risk_grade} />
+                <InfoRow
+                  label="리스크 평균"
+                  value={latestVrb.risk_level_avg != null ? `${latestVrb.risk_level_avg}` : null}
+                />
                 {latestVrb.meeting_result && (
                   <div className="pt-2">
                     <p className="text-sm text-muted-foreground">심의 결과</p>
@@ -272,24 +216,22 @@ export default async function ProjectDetailPage({ params }: Props) {
           <CardContent>
             {pl ? (
               <div className="space-y-0">
-                {infoRow("제안가", formatKrw(pl.proposal_price))}
-                {infoRow("예상 수주가", formatKrw(pl.expected_price))}
-                {infoRow("총 원가", formatKrw(pl.total_cost))}
-                {infoRow("프로젝트 이익", formatKrw(pl.pjt_profit))}
-                {infoRow(
-                  "이익률",
-                  pl.pjt_profit_rate != null
-                    ? `${(pl.pjt_profit_rate * 100).toFixed(1)}%`
-                    : null,
-                )}
-                <div className="border-t pt-2 mt-2">
+                <InfoRow label="제안가" value={formatKrw(pl.proposal_price)} />
+                <InfoRow label="예상 수주가" value={formatKrw(pl.expected_price)} />
+                <InfoRow label="총 원가" value={formatKrw(pl.total_cost)} />
+                <InfoRow label="프로젝트 이익" value={formatKrw(pl.pjt_profit)} />
+                <InfoRow
+                  label="이익률"
+                  value={pl.pjt_profit_rate != null ? `${(pl.pjt_profit_rate * 100).toFixed(1)}%` : null}
+                />
+                <div className="mt-2 border-t pt-2">
                   <p className="mb-1 text-xs font-medium text-muted-foreground">원가 내역</p>
-                  {infoRow("라이선스", formatKrw(pl.license_cost))}
-                  {infoRow("자체 인건비", formatKrw(pl.inhouse_labor_cost))}
-                  {infoRow("외주비", formatKrw(pl.outsource_cost))}
-                  {infoRow("물품비", formatKrw(pl.goods_cost))}
-                  {infoRow("직접경비", formatKrw(pl.direct_expense))}
-                  {infoRow("예비비", formatKrw(pl.contingency))}
+                  <InfoRow label="라이선스" value={formatKrw(pl.license_cost)} />
+                  <InfoRow label="자체 인건비" value={formatKrw(pl.inhouse_labor_cost)} />
+                  <InfoRow label="외주비" value={formatKrw(pl.outsource_cost)} />
+                  <InfoRow label="물품비" value={formatKrw(pl.goods_cost)} />
+                  <InfoRow label="직접경비" value={formatKrw(pl.direct_expense)} />
+                  <InfoRow label="예비비" value={formatKrw(pl.contingency)} />
                 </div>
               </div>
             ) : (
@@ -302,9 +244,7 @@ export default async function ProjectDetailPage({ params }: Props) {
       {/* ── 적격 심사 ── */}
       <Card className="mt-6" data-testid="card-qualification">
         <CardHeader>
-          <CardTitle className="text-base">
-            적격 심사 ({quals.length}건)
-          </CardTitle>
+          <CardTitle className="text-base">적격 심사 ({quals.length}건)</CardTitle>
         </CardHeader>
         <CardContent>
           {quals.length > 0 ? (
@@ -325,17 +265,11 @@ export default async function ProjectDetailPage({ params }: Props) {
                     <TableRow key={q.id} data-testid={`qual-row-${q.id}`}>
                       <TableCell className="font-medium">{q.item_name}</TableCell>
                       <TableCell>{q.item_type ?? "-"}</TableCell>
-                      <TableCell className="max-w-[240px] truncate">
-                        {q.condition_text ?? "-"}
-                      </TableCell>
+                      <TableCell className="max-w-[240px] truncate">{q.condition_text ?? "-"}</TableCell>
                       <TableCell>
-                        <Badge variant="outline" className={status.className}>
-                          {status.text}
-                        </Badge>
+                        <Badge variant="outline" className={status.className}>{status.text}</Badge>
                       </TableCell>
-                      <TableCell className="max-w-[200px] truncate">
-                        {q.check_note ?? "-"}
-                      </TableCell>
+                      <TableCell className="max-w-[200px] truncate">{q.check_note ?? "-"}</TableCell>
                     </TableRow>
                   );
                 })}
@@ -350,9 +284,7 @@ export default async function ProjectDetailPage({ params }: Props) {
       {/* ── 서류 현황 ── */}
       <Card className="mt-6" data-testid="card-documents">
         <CardHeader>
-          <CardTitle className="text-base">
-            서류 현황 ({docs.length}건)
-          </CardTitle>
+          <CardTitle className="text-base">서류 현황 ({docs.length}건)</CardTitle>
         </CardHeader>
         <CardContent>
           {docs.length > 0 ? (
@@ -367,17 +299,14 @@ export default async function ProjectDetailPage({ params }: Props) {
               </TableHeader>
               <TableBody>
                 {docs.map((d) => {
-                  const status =
-                    DOC_STATUS[d.validation_status ?? "pending"] ?? DOC_STATUS.pending;
+                  const status = DOC_STATUS[d.validation_status ?? "pending"] ?? DOC_STATUS.pending;
                   return (
                     <TableRow key={d.id} data-testid={`doc-row-${d.id}`}>
                       <TableCell className="font-medium">{d.doc_name}</TableCell>
                       <TableCell>{d.doc_category ?? "-"}</TableCell>
                       <TableCell>{d.is_required ? "필수" : "선택"}</TableCell>
                       <TableCell>
-                        <Badge variant="outline" className={status.className}>
-                          {status.text}
-                        </Badge>
+                        <Badge variant="outline" className={status.className}>{status.text}</Badge>
                       </TableCell>
                     </TableRow>
                   );
@@ -393,9 +322,7 @@ export default async function ProjectDetailPage({ params }: Props) {
       {/* ── 협력사 현황 ── */}
       <Card className="mt-6" data-testid="card-partners">
         <CardHeader>
-          <CardTitle className="text-base">
-            협력사 현황 ({partners.length}건)
-          </CardTitle>
+          <CardTitle className="text-base">협력사 현황 ({partners.length}건)</CardTitle>
         </CardHeader>
         <CardContent>
           {partners.length > 0 ? (
@@ -414,16 +341,10 @@ export default async function ProjectDetailPage({ params }: Props) {
                 {partners.map((pt) => (
                   <TableRow key={pt.id} data-testid={`partner-row-${pt.id}`}>
                     <TableCell className="font-medium">{pt.company_name}</TableCell>
-                    <TableCell>
-                      {PARTNER_TYPE_LABEL[pt.partner_type] ?? pt.partner_type}
-                    </TableCell>
-                    <TableCell className="max-w-[200px] truncate">
-                      {pt.work_scope ?? "-"}
-                    </TableCell>
+                    <TableCell>{PARTNER_TYPE_LABEL[pt.partner_type] ?? pt.partner_type}</TableCell>
+                    <TableCell className="max-w-[200px] truncate">{pt.work_scope ?? "-"}</TableCell>
                     <TableCell>{formatKrw(pt.sub_amount)}</TableCell>
-                    <TableCell>
-                      {pt.sub_rate != null ? `${pt.sub_rate}%` : "-"}
-                    </TableCell>
+                    <TableCell>{pt.sub_rate != null ? `${pt.sub_rate}%` : "-"}</TableCell>
                     <TableCell>{pt.status}</TableCell>
                   </TableRow>
                 ))}
@@ -438,9 +359,7 @@ export default async function ProjectDetailPage({ params }: Props) {
       {/* ── 리스크 현황 ── */}
       <Card className="mt-6" data-testid="card-risks">
         <CardHeader>
-          <CardTitle className="text-base">
-            미해결 리스크 ({risks.length}건)
-          </CardTitle>
+          <CardTitle className="text-base">미해결 리스크 ({risks.length}건)</CardTitle>
         </CardHeader>
         <CardContent>
           {risks.length > 0 ? (
@@ -460,14 +379,10 @@ export default async function ProjectDetailPage({ params }: Props) {
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium">{r.risk_title ?? "리스크"}</p>
                     {r.risk_message && (
-                      <p className="mt-0.5 text-sm text-muted-foreground">
-                        {r.risk_message}
-                      </p>
+                      <p className="mt-0.5 text-sm text-muted-foreground">{r.risk_message}</p>
                     )}
                   </div>
-                  <span className="shrink-0 text-xs text-muted-foreground">
-                    {r.risk_type ?? ""}
-                  </span>
+                  <span className="shrink-0 text-xs text-muted-foreground">{r.risk_type ?? ""}</span>
                 </div>
               ))}
             </div>

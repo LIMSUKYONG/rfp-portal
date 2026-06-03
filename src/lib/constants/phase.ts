@@ -1,5 +1,6 @@
 export const PHASE_STYLE: Record<string, string> = {
   rfp_registered: "bg-gray-100 text-gray-700 border-gray-200",
+  qualification_check: "bg-gray-100 text-gray-700 border-gray-200",
   in_progress: "bg-blue-100 text-blue-700 border-blue-200",
   track_a_done: "bg-green-100 text-green-700 border-green-200",
   vrb_approved: "bg-purple-100 text-purple-700 border-purple-200",
@@ -13,6 +14,7 @@ export const PHASE_STYLE: Record<string, string> = {
 
 export const PHASE_LABEL: Record<string, string> = {
   rfp_registered: "RFP 등록",
+  qualification_check: "적격 심사",
   in_progress: "진행 중",
   track_a_done: "트랙A 완료",
   vrb_approved: "VRB 승인",
