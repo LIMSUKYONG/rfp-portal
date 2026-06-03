@@ -14,38 +14,33 @@ const RFP_BUCKET = "rfp-files";
 /* ── upload (browser-side) ── */
 
 export async function uploadRfpFile(
-  supabaseUrl: string,
-  supabaseKey: string,
+  _supabaseUrl: string,
+  _supabaseKey: string,
   file: File,
   onProgress?: (pct: number) => void,
 ): Promise<{ path: string; error: string | null }> {
-  const path = `${crypto.randomUUID()}/${file.name}`;
-
-  const signRes = await fetch(
-    `${supabaseUrl}/storage/v1/object/upload/sign/${RFP_BUCKET}/${path}`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${supabaseKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({}),
-    },
-  );
+  // 1. Get presigned URL from server (admin client — bypasses RLS)
+  const signRes = await fetch("/api/rfp/presign", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ fileName: file.name }),
+  });
 
   if (!signRes.ok) {
-    const body = await signRes.text();
-    return { path: "", error: `서명된 URL 생성 실패: ${body}` };
+    const body = await signRes.json().catch(() => ({ error: "presign 실패" }));
+    return { path: "", error: (body as { error?: string }).error ?? "서명된 URL 생성 실패" };
   }
 
-  const { token } = (await signRes.json()) as { token: string };
+  const { path, signedUrl } = (await signRes.json()) as {
+    path: string;
+    signedUrl: string;
+    token: string;
+  };
 
+  // 2. Upload directly to signed URL via XHR (progress tracking)
   return new Promise((resolve) => {
     const xhr = new XMLHttpRequest();
-    xhr.open(
-      "PUT",
-      `${supabaseUrl}/storage/v1/object/upload/${RFP_BUCKET}/${path}?token=${token}`,
-    );
+    xhr.open("PUT", signedUrl);
     xhr.setRequestHeader("Content-Type", file.type || "application/pdf");
 
     xhr.upload.addEventListener("progress", (e) => {
