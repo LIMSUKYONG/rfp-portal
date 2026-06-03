@@ -146,6 +146,58 @@ export interface Document {
   needs_review: boolean;
 }
 
+/* ── RFP parse related ── */
+
+export type RfpRuleSourceType = "rfp_direct" | "ai_extracted" | "law_research" | "default";
+
+export interface RfpRule {
+  id: string;
+  project_id: string;
+  rule_type: string;
+  rule_target: string | null;
+  condition_type: string | null;
+  condition_value: Record<string, unknown>;
+  source_type: RfpRuleSourceType;
+  source_text: string | null;
+  source_page: string | null;
+  law_reference: string | null;
+  law_url: string | null;
+  law_verified_at: string | null;
+  is_verified: boolean;
+  needs_review: boolean;
+  review_note: string | null;
+  created_at: string;
+}
+
+export interface RfpParsedProjectInfo {
+  name: string | null;
+  client: string | null;
+  budget_amount: number | null;
+  bid_deadline: string | null;
+  project_type: string | null;
+  category: string | null;
+  contract_method: string | null;
+  project_period: string | null;
+  warranty_period: string | null;
+}
+
+export interface RfpParsedRule {
+  rule_type: string;
+  rule_target: string | null;
+  condition_type: string | null;
+  condition_value: Record<string, unknown>;
+  source_type: RfpRuleSourceType;
+  source_text: string | null;
+  source_page: string | null;
+  needs_review: boolean;
+  confidence: number;
+}
+
+export interface RfpParseResult {
+  projectInfo: RfpParsedProjectInfo;
+  rules: RfpParsedRule[];
+}
+
 export interface Partner {
   id: string;
   project_id: string;
