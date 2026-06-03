@@ -35,19 +35,7 @@ export default function RegisterPage() {
 
     setIsSubmitting(true);
 
-    // 1. Supabase Auth signUp
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email,
-      password,
-    });
-
-    if (authError || !authData.user) {
-      setError(authError?.message ?? "회원가입 실패");
-      setIsSubmitting(false);
-      return;
-    }
-
-    // 2. Create tenant + PM user
+    // All-in-one: API creates Auth user + tenant + rfp_users (admin client)
     const res = await fetch("/api/tenants/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -55,13 +43,25 @@ export default function RegisterPage() {
         tenantName: company.trim(),
         pmEmail: email,
         pmName: name.trim(),
-        authUid: authData.user.id,
+        password,
       }),
     });
 
     if (!res.ok) {
       const body = await res.json();
-      setError(body.error ?? "테넌트 생성 실패");
+      setError(body.error ?? "가입 실패");
+      setIsSubmitting(false);
+      return;
+    }
+
+    // Sign in with the created account
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (signInError) {
+      setError(signInError.message);
       setIsSubmitting(false);
       return;
     }
