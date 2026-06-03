@@ -95,6 +95,31 @@ export interface VrbReview {
   updated_at: string;
 }
 
+export interface VrbDeptReview {
+  id: string;
+  vrb_id: string;
+  dept_type: string;
+  proceed_opinion: string | null;
+  prerequisites: string | null;
+  risk_factors: string | null;
+  risk_solutions: string | null;
+  risk_level: number | null;
+  discussion_points: string | null;
+  reviewer: string | null;
+  reviewed_at: string | null;
+  win_strategy: string | null;
+  strength: string | null;
+  weakness: string | null;
+  competitor_info: Record<string, unknown> | null;
+  proposal_scope: string | null;
+  proposal_strategy: string | null;
+  required_mm: number | null;
+  purchase_amount: number | null;
+  revenue_review: string | null;
+  cost_review: string | null;
+  created_at: string;
+}
+
 export interface ProfitLoss {
   id: string;
   project_id: string;
