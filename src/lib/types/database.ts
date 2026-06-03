@@ -73,8 +73,87 @@ export interface VrbReview {
   project_id: string;
   vrb_type: string | null;
   vrb_round: number;
+  vrb_deadline: string | null;
+  meeting_date: string | null;
+  attendees: string | null;
   vrb_proceed: boolean | null;
   proposal_proceed: boolean | null;
   bid_proceed: boolean | null;
   meeting_result: string | null;
+  risk_level_avg: number | null;
+  risk_grade: string | null;
+  strategic_reason: string | null;
+  created_at: string;
+}
+
+export interface ProfitLoss {
+  id: string;
+  project_id: string;
+  proposal_price: number | null;
+  expected_price: number | null;
+  license_cost: number;
+  inhouse_labor_cost: number;
+  outsource_cost: number;
+  goods_cost: number;
+  direct_expense: number;
+  contingency: number;
+  other_cost: number;
+  direct_purchase_amount: number;
+  total_cost: number;
+  pjt_profit: number;
+  target_margin_rate: number | null;
+  pjt_profit_rate: number;
+}
+
+export interface RiskLog {
+  id: string;
+  project_id: string;
+  phase: string | null;
+  risk_type: string | null;
+  risk_level: string | null;
+  risk_title: string | null;
+  risk_message: string | null;
+  auto_detected: boolean;
+  is_resolved: boolean;
+  resolved_at: string | null;
+  resolved_note: string | null;
+  created_at: string;
+}
+
+export interface QualificationCheck {
+  id: string;
+  project_id: string;
+  item_code: string | null;
+  item_name: string;
+  item_type: string | null;
+  condition_text: string | null;
+  check_result: string | null;
+  check_note: string | null;
+  checked_by: string | null;
+  checked_at: string | null;
+}
+
+export interface Document {
+  id: string;
+  project_id: string;
+  doc_category: string | null;
+  doc_name: string;
+  is_required: boolean;
+  file_url: string | null;
+  validation_status: string | null;
+  validation_message: string | null;
+  needs_review: boolean;
+}
+
+export interface Partner {
+  id: string;
+  project_id: string;
+  partner_type: string;
+  company_name: string;
+  is_sme_sw: boolean;
+  share_rate: number | null;
+  sub_amount: number | null;
+  sub_rate: number | null;
+  status: string;
+  work_scope: string | null;
 }
