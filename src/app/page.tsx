@@ -99,6 +99,9 @@ export default function LoginPage() {
             <Button type="submit" className="w-full" disabled={isSubmitting}>
               {isSubmitting ? "로그인 중..." : "로그인"}
             </Button>
+            <a href="/register" className="text-sm text-muted-foreground hover:underline">
+              회사 가입하기
+            </a>
           </CardFooter>
         </form>
       </Card>

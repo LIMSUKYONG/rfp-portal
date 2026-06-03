@@ -98,3 +98,21 @@ export async function inviteMember(input: {
 
   return { userId: user.id as string, error: null };
 }
+
+export async function fetchTeamMembers(
+  tenantId: string,
+): Promise<{ members: AppUser[]; error: string | null }> {
+  if (!isSupabaseConfigured()) return { members: [], error: "Supabase 미설정" };
+
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("rfp_users")
+    .select("*")
+    .eq("tenant_id", tenantId)
+    .order("created_at", { ascending: true });
+
+  return {
+    members: (data ?? []) as AppUser[],
+    error: error?.message ?? null,
+  };
+}
