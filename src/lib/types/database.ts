@@ -128,10 +128,24 @@ export interface QualificationCheck {
   item_name: string;
   item_type: string | null;
   condition_text: string | null;
+  rfp_rule_id: string | null;
   check_result: string | null;
   check_note: string | null;
   checked_by: string | null;
   checked_at: string | null;
+  created_at: string;
+}
+
+export interface ExperienceRecord {
+  project_id: string;
+  name: string;
+  client: string;
+  category: string | null;
+  contract_amount: number | null;
+  contract_date: string | null;
+  end_date: string | null;
+  sales_rep: string | null;
+  pm: string | null;
 }
 
 export interface Document {
