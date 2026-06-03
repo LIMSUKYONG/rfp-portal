@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@/lib/supabase/server";
+import { geminiPdfToJson } from "@/lib/ai/gemini-client";
 import { mockRfpParse } from "@/lib/ai/mock-responses";
 
 const RFP_BUCKET = "rfp-files";
@@ -95,23 +95,12 @@ export async function POST(request: NextRequest) {
   const { storagePath } = body;
 
   if (!storagePath) {
-    return NextResponse.json(
-      { error: "storagePath가 필요합니다." },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: "storagePath가 필요합니다." }, { status: 400 });
   }
 
   // Mock mode
   if (process.env.USE_AI_MOCK === "true") {
     return NextResponse.json(mockRfpParse);
-  }
-
-  const anthropicKey = process.env.ANTHROPIC_API_KEY;
-  if (!anthropicKey) {
-    return NextResponse.json(
-      { error: "ANTHROPIC_API_KEY가 설정되지 않았습니다." },
-      { status: 500 },
-    );
   }
 
   // 1. Download PDF from Supabase Storage
@@ -131,60 +120,19 @@ export async function POST(request: NextRequest) {
   const arrayBuffer = await fileData.arrayBuffer();
   const base64 = Buffer.from(arrayBuffer).toString("base64");
 
-  // 3. Call Claude API
-  const anthropic = new Anthropic({ apiKey: anthropicKey });
-
-  const message = await anthropic.messages.create({
-    model: "claude-sonnet-4-20250514",
-    max_tokens: 16384,
-    system: SYSTEM_PROMPT,
-    messages: [
-      {
-        role: "user",
-        content: [
-          {
-            type: "document",
-            source: {
-              type: "base64",
-              media_type: "application/pdf",
-              data: base64,
-            },
-          },
-          {
-            type: "text",
-            text: "이 RFP PDF를 분석하여 JSON으로 반환해주세요. projectInfo, rules, documents, laws 모두 포함. JSON만 출력하세요.",
-          },
-        ],
-      },
-    ],
-  });
-
-  // 4. Extract JSON from response
-  const textBlock = message.content.find((b) => b.type === "text");
-  if (!textBlock || textBlock.type !== "text") {
-    return NextResponse.json(
-      { error: "Claude 응답에 텍스트가 없습니다." },
-      { status: 500 },
-    );
-  }
-
-  let jsonStr = textBlock.text.trim();
-  if (jsonStr.startsWith("```")) {
-    jsonStr = jsonStr.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "");
-  }
-
+  // 3. Call Gemini API
   try {
-    const parsed = JSON.parse(jsonStr) as {
-      projectInfo: Record<string, unknown>;
-      rules: Record<string, unknown>[];
-      documents?: Record<string, unknown>[];
-      laws?: Record<string, unknown>[];
-    };
-    return NextResponse.json(parsed);
-  } catch {
-    return NextResponse.json(
-      { error: "Claude 응답 JSON 파싱 실패", raw: jsonStr },
-      { status: 500 },
+    const jsonStr = await geminiPdfToJson(
+      base64,
+      "application/pdf",
+      SYSTEM_PROMPT,
+      "이 RFP PDF를 분석하여 JSON으로 반환해주세요. projectInfo, rules, documents, laws 모두 포함. JSON만 출력하세요.",
     );
+
+    const parsed = JSON.parse(jsonStr);
+    return NextResponse.json(parsed);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "AI 호출 실패";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

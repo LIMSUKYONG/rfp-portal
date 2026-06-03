@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@/lib/supabase/server";
+import { geminiPdfToJson } from "@/lib/ai/gemini-client";
 import { updateDocumentValidation } from "@/lib/api/documents";
 import { mockDocumentValidate } from "@/lib/ai/mock-responses";
 
@@ -36,25 +36,14 @@ export async function POST(request: NextRequest) {
   const { docId, storagePath, fileSizeMb } = body;
 
   if (!docId || !storagePath) {
-    return NextResponse.json(
-      { error: "docId와 storagePath가 필요합니다." },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: "docId와 storagePath가 필요합니다." }, { status: 400 });
   }
 
-  // Mock mode — cycle through different validation results
+  // Mock mode
   if (process.env.USE_AI_MOCK === "true") {
     const cases = [mockDocumentValidate.valid, mockDocumentValidate.expiring_soon, mockDocumentValidate.needs_review];
     const pick = cases[Math.floor(Math.random() * cases.length)];
     return NextResponse.json(pick);
-  }
-
-  const anthropicKey = process.env.ANTHROPIC_API_KEY;
-  if (!anthropicKey) {
-    return NextResponse.json(
-      { error: "ANTHROPIC_API_KEY가 설정되지 않았습니다." },
-      { status: 500 },
-    );
   }
 
   // 1. Download file from Supabase Storage
@@ -73,69 +62,36 @@ export async function POST(request: NextRequest) {
   // 2. Convert to base64
   const arrayBuffer = await fileData.arrayBuffer();
   const base64 = Buffer.from(arrayBuffer).toString("base64");
-  const mimeType = (fileData.type || "application/pdf") as "application/pdf";
+  const mimeType = fileData.type || "application/pdf";
 
-  // 3. Call Claude API
-  const anthropic = new Anthropic({ apiKey: anthropicKey });
-
-  const message = await anthropic.messages.create({
-    model: "claude-sonnet-4-20250514",
-    max_tokens: 2048,
-    system: SYSTEM_PROMPT,
-    messages: [
-      {
-        role: "user",
-        content: [
-          {
-            type: "document",
-            source: { type: "base64", media_type: mimeType, data: base64 },
-          },
-          {
-            type: "text",
-            text: "이 서류를 검증하고 JSON을 반환해주세요.",
-          },
-        ],
-      },
-    ],
-  });
-
-  const textBlock = message.content.find((b) => b.type === "text");
-  if (!textBlock || textBlock.type !== "text") {
-    return NextResponse.json({ error: "Claude 응답 없음" }, { status: 500 });
-  }
-
-  let jsonStr = textBlock.text.trim();
-  if (jsonStr.startsWith("```")) {
-    jsonStr = jsonStr.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "");
-  }
-
-  let result: {
-    validation_status: string;
-    validation_message: string | null;
-    calculated_score: number | null;
-    ai_issue_date: string | null;
-    ai_expiry_date: string | null;
-  };
-
+  // 3. Call Gemini API
   try {
-    result = JSON.parse(jsonStr);
-  } catch {
-    return NextResponse.json({ error: "JSON 파싱 실패", raw: jsonStr }, { status: 500 });
+    const jsonStr = await geminiPdfToJson(
+      base64,
+      mimeType,
+      SYSTEM_PROMPT,
+      "이 서류를 검증하고 JSON을 반환해주세요.",
+    );
+
+    const result = JSON.parse(jsonStr);
+
+    // 4. Update document in DB
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+    const fileUrl = `${supabaseUrl}/storage/v1/object/public/${DOC_BUCKET}/${storagePath}`;
+
+    await updateDocumentValidation(docId, {
+      file_url: fileUrl,
+      file_size_mb: fileSizeMb ?? 0,
+      validation_status: result.validation_status,
+      validation_message: result.validation_message,
+      calculated_score: result.calculated_score,
+      ai_issue_date: result.ai_issue_date,
+      ai_expiry_date: result.ai_expiry_date,
+    });
+
+    return NextResponse.json(result);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "AI 호출 실패";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
-
-  // 4. Update document in DB
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-  const fileUrl = `${supabaseUrl}/storage/v1/object/public/${DOC_BUCKET}/${storagePath}`;
-
-  await updateDocumentValidation(docId, {
-    file_url: fileUrl,
-    file_size_mb: fileSizeMb ?? 0,
-    validation_status: result.validation_status,
-    validation_message: result.validation_message,
-    calculated_score: result.calculated_score,
-    ai_issue_date: result.ai_issue_date,
-    ai_expiry_date: result.ai_expiry_date,
-  });
-
-  return NextResponse.json(result);
 }

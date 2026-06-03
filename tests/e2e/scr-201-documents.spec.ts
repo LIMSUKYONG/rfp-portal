@@ -141,14 +141,14 @@ test.describe("SCR-201 컴포넌트 소스 검증", () => {
     expect(src).toContain("checklistExtras: RfpChecklistExtra[]");
   });
 
-  test("AI 검증 API Route가 Claude를 사용한다", async () => {
+  test("AI 검증 API Route가 Gemini를 사용한다", async () => {
     const src = fs.readFileSync(
       path.resolve(__dirname, "../../src/app/api/documents/validate/route.ts"),
       "utf-8",
     );
 
-    expect(src).toContain("@anthropic-ai/sdk");
-    expect(src).toContain("claude-sonnet-4-20250514");
+    expect(src).toContain("gemini-client");
+    expect(src).toContain("geminiPdfToJson");
     expect(src).toContain("validation_status");
   });
 });

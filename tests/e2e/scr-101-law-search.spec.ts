@@ -32,8 +32,9 @@ test.describe("SCR-101 법령 웹서치 검증", () => {
       "utf-8",
     );
 
-    expect(src).toContain("documents?:");
-    expect(src).toContain("laws?:");
+    // The prompt schema includes both documents and laws arrays
+    expect(src).toContain('"documents"');
+    expect(src).toContain('"laws"');
   });
 
   test("클라이언트 API에 laws 필드가 포함되어 있다", async () => {

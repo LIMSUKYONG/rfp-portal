@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@/lib/supabase/server";
+import { geminiPdfToJson } from "@/lib/ai/gemini-client";
 import { saveProposalEvaluation } from "@/lib/api/proposals";
 import { mockProposalEvaluate } from "@/lib/ai/mock-responses";
 
@@ -50,23 +50,12 @@ export async function POST(request: NextRequest) {
   const { projectId, storagePath, fileSizeMb } = body;
 
   if (!projectId || !storagePath) {
-    return NextResponse.json(
-      { error: "projectId와 storagePath가 필요합니다." },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: "projectId와 storagePath가 필요합니다." }, { status: 400 });
   }
 
   // Mock mode
   if (process.env.USE_AI_MOCK === "true") {
     return NextResponse.json(mockProposalEvaluate);
-  }
-
-  const anthropicKey = process.env.ANTHROPIC_API_KEY;
-  if (!anthropicKey) {
-    return NextResponse.json(
-      { error: "ANTHROPIC_API_KEY가 설정되지 않았습니다." },
-      { status: 500 },
-    );
   }
 
   // 1. Download from Supabase Storage
@@ -86,65 +75,42 @@ export async function POST(request: NextRequest) {
   const arrayBuffer = await fileData.arrayBuffer();
   const base64 = Buffer.from(arrayBuffer).toString("base64");
 
-  // 3. Claude API
-  const anthropic = new Anthropic({ apiKey: anthropicKey });
-
-  const message = await anthropic.messages.create({
-    model: "claude-sonnet-4-20250514",
-    max_tokens: 8192,
-    system: SYSTEM_PROMPT,
-    messages: [
-      {
-        role: "user",
-        content: [
-          {
-            type: "document",
-            source: { type: "base64", media_type: "application/pdf", data: base64 },
-          },
-          { type: "text", text: "이 제안서를 평가하고 JSON을 반환해주세요." },
-        ],
-      },
-    ],
-  });
-
-  const textBlock = message.content.find((b) => b.type === "text");
-  if (!textBlock || textBlock.type !== "text") {
-    return NextResponse.json({ error: "Claude 응답 없음" }, { status: 500 });
-  }
-
-  let jsonStr = textBlock.text.trim();
-  if (jsonStr.startsWith("```")) {
-    jsonStr = jsonStr.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "");
-  }
-
-  let result: Record<string, unknown>;
+  // 3. Call Gemini API
   try {
-    result = JSON.parse(jsonStr);
-  } catch {
-    return NextResponse.json({ error: "JSON 파싱 실패", raw: jsonStr }, { status: 500 });
+    const jsonStr = await geminiPdfToJson(
+      base64,
+      "application/pdf",
+      SYSTEM_PROMPT,
+      "이 제안서를 평가하고 JSON을 반환해주세요.",
+    );
+
+    const result = JSON.parse(jsonStr) as Record<string, unknown>;
+
+    // 4. Save to DB
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+    const fileUrl = `${supabaseUrl}/storage/v1/object/public/${PROPOSAL_BUCKET}/${storagePath}`;
+
+    await saveProposalEvaluation(projectId, fileUrl, fileSizeMb ?? 0, {
+      page_count: (result.page_count as number) ?? null,
+      format_valid: (result.format_valid as boolean) ?? false,
+      format_issues: (result.format_issues as Record<string, unknown>[]) ?? [],
+      has_reference_table: (result.has_reference_table as boolean) ?? false,
+      has_glossary: (result.has_glossary as boolean) ?? false,
+      vague_expr_count: (result.vague_expr_count as number) ?? 0,
+      qualitative_score: (result.qualitative_score as number) ?? null,
+      quantitative_score: (result.quantitative_score as number) ?? null,
+      tech_score_total: (result.tech_score_total as number) ?? null,
+      threshold_pct: (result.threshold_pct as number) ?? null,
+      threshold_score: (result.threshold_score as number) ?? null,
+      meets_threshold: (result.meets_threshold as boolean) ?? false,
+      coverage_rate: (result.coverage_rate as number) ?? null,
+      weak_items: (result.weak_items as Record<string, unknown>[]) ?? [],
+      recommendations: (result.recommendations as Record<string, unknown>[]) ?? [],
+    });
+
+    return NextResponse.json(result);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "AI 호출 실패";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
-
-  // 4. Save to DB
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-  const fileUrl = `${supabaseUrl}/storage/v1/object/public/${PROPOSAL_BUCKET}/${storagePath}`;
-
-  await saveProposalEvaluation(projectId, fileUrl, fileSizeMb ?? 0, {
-    page_count: (result.page_count as number) ?? null,
-    format_valid: (result.format_valid as boolean) ?? false,
-    format_issues: (result.format_issues as Record<string, unknown>[]) ?? [],
-    has_reference_table: (result.has_reference_table as boolean) ?? false,
-    has_glossary: (result.has_glossary as boolean) ?? false,
-    vague_expr_count: (result.vague_expr_count as number) ?? 0,
-    qualitative_score: (result.qualitative_score as number) ?? null,
-    quantitative_score: (result.quantitative_score as number) ?? null,
-    tech_score_total: (result.tech_score_total as number) ?? null,
-    threshold_pct: (result.threshold_pct as number) ?? null,
-    threshold_score: (result.threshold_score as number) ?? null,
-    meets_threshold: (result.meets_threshold as boolean) ?? false,
-    coverage_rate: (result.coverage_rate as number) ?? null,
-    weak_items: (result.weak_items as Record<string, unknown>[]) ?? [],
-    recommendations: (result.recommendations as Record<string, unknown>[]) ?? [],
-  });
-
-  return NextResponse.json(result);
 }
