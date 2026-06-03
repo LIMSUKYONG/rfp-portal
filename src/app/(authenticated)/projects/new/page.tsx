@@ -229,12 +229,24 @@ export default function RfpNewPage() {
         <Card>
           <CardHeader><CardTitle className="text-base">RFP 파일 업로드</CardTitle></CardHeader>
           <CardContent>
+            <input
+              ref={fileInputRef}
+              data-testid="rfp-file-input"
+              type="file"
+              accept=".pdf,application/pdf"
+              className="sr-only"
+              tabIndex={-1}
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); e.target.value = ""; }}
+            />
             <div
               data-testid="rfp-upload-zone"
+              role="button"
+              tabIndex={0}
               onDrop={onDrop}
               onDragOver={onDragOver}
               onClick={() => fileInputRef.current?.click()}
-              className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25 p-12 transition-colors hover:border-muted-foreground/50"
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") fileInputRef.current?.click(); }}
+              className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25 p-12 transition-colors hover:border-muted-foreground/50 hover:bg-muted/30"
             >
               <svg className="mb-3 h-10 w-10 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" />
@@ -243,14 +255,6 @@ export default function RfpNewPage() {
                 {fileName ?? "PDF 파일을 드래그하거나 클릭하여 업로드"}
               </p>
               <p className="mt-1 text-xs text-muted-foreground">최대 100MB</p>
-              <input
-                ref={fileInputRef}
-                data-testid="rfp-file-input"
-                type="file"
-                accept=".pdf,application/pdf"
-                className="hidden"
-                onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }}
-              />
             </div>
             {step === "uploading" && (
               <div className="mt-4" data-testid="upload-progress">
