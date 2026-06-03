@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type {
   Project,
   ProjectCompletion,
@@ -62,7 +62,7 @@ export async function fetchProjectList(
     return { rows: [], error: "Supabase가 설정되지 않았습니다. .env.local 파일을 확인하세요." };
   }
 
-  const supabase = createClient();
+  const supabase = createAdminClient();
 
   let query = supabase
     .from("rfp_projects")
@@ -126,7 +126,7 @@ export async function fetchProjectDetail(
 ): Promise<ProjectDetail | null> {
   if (!isSupabaseConfigured()) return null;
 
-  const supabase = createClient();
+  const supabase = createAdminClient();
 
   const [
     projectRes,

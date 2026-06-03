@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type { Negotiation } from "@/lib/types/database";
 
 function isSupabaseConfigured(): boolean {
@@ -16,7 +16,7 @@ export interface NegotiationPageData {
 export async function fetchNegotiations(projectId: string): Promise<NegotiationPageData> {
   if (!isSupabaseConfigured()) return { negotiations: [], firstBidPrice: null, negotiationRules: null, deadline: null, error: "Supabase 미설정" };
 
-  const supabase = createClient();
+  const supabase = createAdminClient();
   const [negRes, simRes, ruleRes] = await Promise.all([
     supabase.from("rfp_negotiations").select("*").eq("project_id", projectId).order("negotiation_round", { ascending: true }),
     supabase.from("rfp_price_simulations").select("selected_price").eq("project_id", projectId).order("created_at", { ascending: false }).limit(1),
@@ -46,7 +46,7 @@ export async function addNegotiationRound(projectId: string, data: {
   negotiation_status?: string;
 }): Promise<{ error: string | null }> {
   if (!isSupabaseConfigured()) return { error: "Supabase 미설정" };
-  const supabase = createClient();
+  const supabase = createAdminClient();
 
   // Get next round number
   const { data: existing } = await supabase.from("rfp_negotiations").select("negotiation_round").eq("project_id", projectId).order("negotiation_round", { ascending: false }).limit(1);
@@ -60,7 +60,7 @@ export async function addNegotiationRound(projectId: string, data: {
 
 export async function confirmFinalPrice(projectId: string, finalAmount: number): Promise<{ error: string | null }> {
   if (!isSupabaseConfigured()) return { error: "Supabase 미설정" };
-  const supabase = createClient();
+  const supabase = createAdminClient();
   const { error } = await supabase.from("rfp_projects").update({ phase: "selected", updated_at: new Date().toISOString() }).eq("id", projectId);
   return { error: error?.message ?? null };
 }

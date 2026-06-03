@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type { PriceSimulation, ProjectPhase } from "@/lib/types/database";
 
 function isSupabaseConfigured(): boolean {
@@ -17,7 +17,7 @@ export interface PricePageData {
 export async function fetchPriceSimulations(projectId: string): Promise<PricePageData> {
   if (!isSupabaseConfigured()) return { simulation: null, projectPhase: null, budgetAmount: null, techScore: null, priceFormula: null, error: "Supabase 미설정" };
 
-  const supabase = createClient();
+  const supabase = createAdminClient();
   const [simRes, projRes, ruleRes] = await Promise.all([
     supabase.from("rfp_price_simulations").select("*").eq("project_id", projectId).order("created_at", { ascending: false }).limit(1),
     supabase.from("rfp_projects").select("phase, budget_amount").eq("id", projectId).single(),
@@ -45,7 +45,7 @@ export async function savePriceSimulation(projectId: string, data: {
   budget_amount?: number;
 }): Promise<{ error: string | null }> {
   if (!isSupabaseConfigured()) return { error: "Supabase 미설정" };
-  const supabase = createClient();
+  const supabase = createAdminClient();
   const { error } = await supabase.from("rfp_price_simulations").insert({
     project_id: projectId, ...data, selected_at: new Date().toISOString(),
   });
@@ -54,7 +54,7 @@ export async function savePriceSimulation(projectId: string, data: {
 
 export async function confirmBidPrice(projectId: string): Promise<{ error: string | null }> {
   if (!isSupabaseConfigured()) return { error: "Supabase 미설정" };
-  const supabase = createClient();
+  const supabase = createAdminClient();
   const { error } = await supabase.from("rfp_projects").update({ phase: "bid_submitted", updated_at: new Date().toISOString() }).eq("id", projectId);
   return { error: error?.message ?? null };
 }

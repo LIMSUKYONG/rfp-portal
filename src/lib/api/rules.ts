@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type { RfpRule, LawReference } from "@/lib/types/database";
 
 function isSupabaseConfigured(): boolean {
@@ -23,7 +23,7 @@ export async function fetchPendingRules(
     return { rules: [], laws: [], totalRules: 0, pendingCount: 0, error: "Supabase 미설정" };
   }
 
-  const supabase = createClient();
+  const supabase = createAdminClient();
 
   const [pendingRes, allRulesRes, lawsRes] = await Promise.all([
     supabase
@@ -62,7 +62,7 @@ export async function updateRuleValue(
 ): Promise<{ error: string | null }> {
   if (!isSupabaseConfigured()) return { error: "Supabase 미설정" };
 
-  const supabase = createClient();
+  const supabase = createAdminClient();
   const { error } = await supabase
     .from("rfp_rules")
     .update(update)
@@ -76,7 +76,7 @@ export async function confirmRule(
 ): Promise<{ error: string | null }> {
   if (!isSupabaseConfigured()) return { error: "Supabase 미설정" };
 
-  const supabase = createClient();
+  const supabase = createAdminClient();
   const { error } = await supabase
     .from("rfp_rules")
     .update({

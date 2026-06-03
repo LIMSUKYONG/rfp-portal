@@ -1,98 +1,142 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { geminiPdfToJson } from "@/lib/ai/gemini-client";
 import { mockRfpParse } from "@/lib/ai/mock-responses";
 
 const RFP_BUCKET = "rfp-files";
 
-const SYSTEM_PROMPT = `당신은 한국 공공기관 RFP(제안요청서) PDF를 분석하는 전문가입니다.
-PDF에서 다음 정보를 JSON으로 추출하세요. 확인할 수 없는 항목은 null로 반환하세요.
+/* ── 4-section prompts ── */
 
-⚠️ 절대 원칙: 특정 서식명/서류명/기관명을 추측하거나 하드코딩하지 마세요.
-오직 이 RFP PDF에 실제로 적힌 내용만 추출하세요. 문서에 없으면 null입니다.
-
-반드시 아래 JSON 스키마를 따르세요:
+const PROMPTS: Record<string, { system: string; user: string }> = {
+  general: {
+    system: `한국 공공기관 RFP PDF에서 일반사항만 추출하세요.
+반드시 아래 JSON을 반환:
 {
   "projectInfo": {
-    "name": "프로젝트명 (string | null)",
-    "client": "발주처 (string | null)",
-    "budget_amount": "사업예산 원 단위 숫자 (number | null)",
-    "bid_deadline": "입찰마감일 YYYY-MM-DD (string | null)",
-    "project_type": "사업유형: si/sm/consulting/etc (string | null)",
-    "category": "분류: public/private/etc (string | null)",
-    "contract_method": "계약방식 (string | null)",
-    "project_period": "사업기간 (string | null)",
-    "warranty_period": "하자보수기간 (string | null)"
+    "name": "프로젝트명 (string|null)",
+    "client": "발주기관 (string|null)",
+    "budget_amount": "예산 원단위 숫자 (number|null)",
+    "bid_deadline": "입찰마감일 YYYY-MM-DD (string|null)",
+    "project_type": "si/sm/consulting (string|null)",
+    "category": "public/private (string|null)",
+    "contract_method": "계약방식 (string|null)",
+    "project_period": "사업기간 (string|null)",
+    "warranty_period": "하자보수기간 (string|null)"
   },
   "rules": [
     {
-      "rule_type": "규칙유형",
-      "rule_target": "대상 (string | null)",
-      "condition_type": "조건유형: min/max/required/range/etc (string | null)",
-      "condition_value": { "값 객체" },
-      "source_type": "ai_extracted | law_research | default",
-      "source_text": "원문 인용 (string | null)",
-      "source_page": "PDF 페이지 번호 (string | null)",
-      "needs_review": "사람 확인 필요 여부 (boolean)",
-      "confidence": "추출 신뢰도 0~1 (number)"
+      "rule_type": "qualification",
+      "rule_target": "대상",
+      "condition_type": "min/max/required",
+      "condition_value": {},
+      "source_type": "ai_extracted",
+      "source_text": "원문인용",
+      "source_page": "페이지번호",
+      "needs_review": false,
+      "confidence": 0.9
     }
-  ],
+  ]
+}
+자격요건(실적/인증/재무)과 일정 관련 규칙만 추출. 다른 내용 무시.
+문서에 없으면 null. JSON만 출력.`,
+    user: "이 RFP에서 사업개요, 자격요건, 일정만 추출하세요. JSON만 반환.",
+  },
+
+  documents: {
+    system: `한국 공공기관 RFP PDF에서 제출서류와 서식만 추출하세요.
+반드시 아래 JSON을 반환:
+{
   "documents": [
     {
-      "form_number": "RFP에서 추출한 서식번호 (string | null)",
-      "doc_name": "RFP에서 추출한 서류명 (string)",
-      "submit_timing": "bid_time | contract_time | post_contract",
-      "rfp_page": "출처 페이지 (string | null)",
-      "condition_note": "주)항 원문 그대로 (string | null)",
+      "form_number": "서식번호 (string|null)",
+      "doc_name": "서류명",
+      "submit_timing": "bid_time|contract_time|post_contract",
+      "rfp_page": "페이지번호",
+      "condition_note": "주)항 원문 그대로",
       "proof_items": [
         {
-          "item_name": "RFP에서 추출한 증빙서류명 (string)",
-          "condition_type": "AND | OR",
+          "item_name": "증빙서류명",
+          "condition_type": "AND|OR",
           "condition_group": 1,
           "min_required": 1,
-          "issuing_org": "발급기관 (string | null — RFP에 없으면 null)",
+          "issuing_org": "발급기관 (null가능)",
           "validity_days": null,
           "needs_review": false
         }
       ]
     }
+  ]
+}
+AND 키워드: 모두, 각각, 전부, 및, 와
+OR 키워드: 또는, 중 하나, 택일, 택1
+불명확 시: condition_type="AND", needs_review=true
+문서에 없으면 추측 금지. JSON만 출력.`,
+    user: "이 RFP에서 제출서류, 서식 목록, 증빙조건(AND/OR)만 추출하세요. JSON만 반환.",
+  },
+
+  requirements: {
+    system: `한국 공공기관 RFP PDF에서 기능요건과 평가배점만 추출하세요.
+반드시 아래 JSON을 반환:
+{
+  "rules": [
+    {
+      "rule_type": "eval_criteria|tech_spec",
+      "rule_target": "항목명",
+      "condition_type": "required|score",
+      "condition_value": {"max_score": 0, "domain": ""},
+      "source_type": "ai_extracted",
+      "source_text": "원문인용",
+      "source_page": "페이지번호",
+      "needs_review": false,
+      "confidence": 0.9
+    }
+  ]
+}
+요구기능, 평가항목, 배점만 추출. JSON만 출력.`,
+    user: "이 RFP에서 요구기능 목록과 평가배점표만 추출하세요. JSON만 반환.",
+  },
+
+  conditions: {
+    system: `한국 공공기관 RFP PDF에서 제안조건과 법령만 추출하세요.
+반드시 아래 JSON을 반환:
+{
+  "rules": [
+    {
+      "rule_type": "proposal_format|bid_deposit|subcontract|penalty|schedule|other",
+      "rule_target": "대상",
+      "condition_type": "required|max|min",
+      "condition_value": {},
+      "source_type": "ai_extracted",
+      "source_text": "원문인용",
+      "source_page": "페이지번호",
+      "needs_review": false,
+      "confidence": 0.9
+    }
   ],
   "laws": [
     {
-      "law_name": "법령명 (string)",
-      "article": "조항 (string | null)",
-      "content": "관련 내용 요약 (string | null)",
+      "law_name": "법령명",
+      "article": "조항",
+      "content": "관련내용",
       "url": null,
       "is_current": true,
       "needs_review": false
     }
   ]
 }
-
-규칙 유형: qualification, doc_requirement, tech_spec, eval_criteria, subcontract, schedule, penalty, bid_deposit, presentation_rules, direct_purchase_items, proposal_format, other
-
-서식 및 증빙서류 추출 규칙:
-1. 이 RFP/입찰공고에 명시된 서식 목록을 전부 찾아라.
-2. 각 서식 하단의 주), 비고, 유의사항을 반드시 확인하라.
-3. 증빙서류 제출 조건을 다음 기준으로 판단하라:
-   - AND 조건 키워드: 모두, 각각, 전부, 및, 와, 함께, 일체
-   - OR 조건 키워드: 또는, 혹은, 중 하나, 택일, 하나만, 어느 하나, 택1
-   - 복합 조건(AND+OR 혼합): condition_group 번호로 분리
-   - 조건 불명확 시: condition_type="AND", needs_review=true (더 엄격한 기준)
-4. 오직 이 RFP 문서에 실제로 적힌 내용만 추출하라. 추측 금지.
-5. 문서에 없으면 needs_review=true로 표시하라.
-
-법령 추출 규칙:
-1. RFP에 인용된 법령명, 조항, 항, 호를 전부 추출하라.
-2. 법령이 폐지/개정되었을 가능성이 있으면 is_current=false, needs_review=true.
-3. 법령 URL은 알 수 없으면 null로 두라.
-
-confidence가 0.7 미만이면 needs_review=true로 설정하세요.
-JSON만 출력하세요.`;
+제출형식, 입찰보증금, 하도급조건, 발표조건, 협상조건, 인용법령만 추출.
+JSON만 출력.`,
+    user: "이 RFP에서 제안조건, 입찰조건, 인용법령만 추출하세요. JSON만 반환.",
+  },
+};
 
 export async function POST(request: NextRequest) {
-  const body = (await request.json()) as { storagePath?: string };
-  const { storagePath } = body;
+  const body = (await request.json()) as {
+    storagePath?: string;
+    step?: string; // "general" | "documents" | "requirements" | "conditions" | "all"
+  };
+
+  const { storagePath, step = "all" } = body;
 
   if (!storagePath) {
     return NextResponse.json({ error: "storagePath가 필요합니다." }, { status: 400 });
@@ -103,8 +147,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(mockRfpParse);
   }
 
-  // 1. Download PDF from Supabase Storage
-  const supabase = createClient();
+  // Download PDF
+  const supabase = createAdminClient();
   const { data: fileData, error: downloadError } = await supabase.storage
     .from(RFP_BUCKET)
     .download(storagePath);
@@ -116,23 +160,40 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // 2. Convert to base64
   const arrayBuffer = await fileData.arrayBuffer();
   const base64 = Buffer.from(arrayBuffer).toString("base64");
 
-  // 3. Call Gemini API
-  try {
-    const jsonStr = await geminiPdfToJson(
-      base64,
-      "application/pdf",
-      SYSTEM_PROMPT,
-      "이 RFP PDF를 분석하여 JSON으로 반환해주세요. projectInfo, rules, documents, laws 모두 포함. JSON만 출력하세요.",
-    );
+  // Single step
+  if (step !== "all" && PROMPTS[step]) {
+    try {
+      const prompt = PROMPTS[step];
+      const jsonStr = await geminiPdfToJson(base64, "application/pdf", prompt.system, prompt.user);
+      return NextResponse.json(JSON.parse(jsonStr));
+    } catch (err) {
+      return NextResponse.json({ error: err instanceof Error ? err.message : "AI 호출 실패" }, { status: 500 });
+    }
+  }
 
-    const parsed = JSON.parse(jsonStr);
-    return NextResponse.json(parsed);
+  // All steps sequentially
+  try {
+    const results: Record<string, unknown> = {};
+
+    for (const key of ["general", "documents", "requirements", "conditions"] as const) {
+      const prompt = PROMPTS[key];
+      const jsonStr = await geminiPdfToJson(base64, "application/pdf", prompt.system, prompt.user);
+      const parsed = JSON.parse(jsonStr);
+      Object.assign(results, parsed);
+
+      // Merge rules arrays
+      if (parsed.rules && results.rules) {
+        if (key !== "general") {
+          (results.rules as unknown[]).push(...(parsed.rules as unknown[]));
+        }
+      }
+    }
+
+    return NextResponse.json(results);
   } catch (err) {
-    const message = err instanceof Error ? err.message : "AI 호출 실패";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ error: err instanceof Error ? err.message : "AI 호출 실패" }, { status: 500 });
   }
 }

@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type { Contract } from "@/lib/types/database";
 
 function isSupabaseConfigured(): boolean {
@@ -14,7 +14,7 @@ export interface ContractPageData {
 export async function fetchContract(projectId: string): Promise<ContractPageData> {
   if (!isSupabaseConfigured()) return { contract: null, warrantyPeriod: null, error: "Supabase 미설정" };
 
-  const supabase = createClient();
+  const supabase = createAdminClient();
   const [cRes, ruleRes] = await Promise.all([
     supabase.from("rfp_contracts").select("*").eq("project_id", projectId).order("created_at", { ascending: false }).limit(1),
     supabase.from("rfp_rules").select("condition_value").eq("project_id", projectId).eq("rule_type", "contract_conditions").limit(1),
@@ -45,7 +45,7 @@ export async function saveContract(projectId: string, data: {
   contract_file_size_mb?: number;
 }): Promise<{ contractId: string; error: string | null }> {
   if (!isSupabaseConfigured()) return { contractId: "", error: "Supabase 미설정" };
-  const supabase = createClient();
+  const supabase = createAdminClient();
 
   const { data: c, error: cErr } = await supabase.from("rfp_contracts").insert({
     project_id: projectId, ...data, registered_as_experience: true,

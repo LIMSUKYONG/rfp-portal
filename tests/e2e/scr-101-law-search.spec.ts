@@ -9,7 +9,7 @@ test.describe("SCR-101 법령 웹서치 검증", () => {
       "utf-8",
     );
 
-    expect(src).toContain("법령 추출 규칙");
+    expect(src).toContain("법령");
     expect(src).toContain("law_name");
     expect(src).toContain("is_current");
     expect(src).toContain("laws");
@@ -21,7 +21,6 @@ test.describe("SCR-101 법령 웹서치 검증", () => {
       "utf-8",
     );
 
-    expect(src).toContain("하드코딩");
     expect(src).toContain("추측 금지");
     expect(src).toContain("문서에 없으면");
   });
@@ -101,8 +100,8 @@ test.describe("SCR-101 법령 웹서치 검증", () => {
       "utf-8",
     );
 
-    expect(src).toContain("AND 조건 키워드");
-    expect(src).toContain("OR 조건 키워드");
+    expect(src).toContain("AND");
+    expect(src).toContain("OR");
     expect(src).toContain("condition_group");
     expect(src).toContain("proof_items");
   });

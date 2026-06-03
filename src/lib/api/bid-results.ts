@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type { BidResult, ProjectPhase } from "@/lib/types/database";
 
 function isSupabaseConfigured(): boolean {
@@ -15,7 +15,7 @@ export interface BidResultPageData {
 export async function fetchBidResult(projectId: string): Promise<BidResultPageData> {
   if (!isSupabaseConfigured()) return { bidResult: null, predictedTechScore: null, submittedPrice: null, error: "Supabase 미설정" };
 
-  const supabase = createClient();
+  const supabase = createAdminClient();
   const [brRes, propRes, simRes] = await Promise.all([
     supabase.from("rfp_bid_results").select("*").eq("project_id", projectId).order("created_at", { ascending: false }).limit(1),
     supabase.from("rfp_proposals").select("tech_score_total").eq("project_id", projectId).order("version", { ascending: false }).limit(1),
@@ -43,7 +43,7 @@ export async function saveBidResult(projectId: string, data: {
   score_diff?: number;
 }): Promise<{ error: string | null }> {
   if (!isSupabaseConfigured()) return { error: "Supabase 미설정" };
-  const supabase = createClient();
+  const supabase = createAdminClient();
 
   const { error: brErr } = await supabase.from("rfp_bid_results").insert({
     project_id: projectId, ...data, submitted_at: new Date().toISOString(),

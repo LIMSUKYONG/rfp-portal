@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type { ReferenceTableItem } from "@/lib/types/database";
 
 function isSupabaseConfigured(): boolean {
@@ -23,7 +23,7 @@ export async function fetchReferenceTable(
     return { items: [], totalCount: 0, reviewedCount: 0, implTypes: [], error: "Supabase 미설정" };
   }
 
-  const supabase = createClient();
+  const supabase = createAdminClient();
 
   const [itemsRes, implRes] = await Promise.all([
     supabase
@@ -82,7 +82,7 @@ export async function updateRefTableItem(
 ): Promise<{ error: string | null }> {
   if (!isSupabaseConfigured()) return { error: "Supabase 미설정" };
 
-  const supabase = createClient();
+  const supabase = createAdminClient();
   const { error } = await supabase
     .from("rfp_reference_table_items")
     .update({
@@ -103,7 +103,7 @@ export async function createRefTableExport(
 ): Promise<{ exportId: string; error: string | null }> {
   if (!isSupabaseConfigured()) return { exportId: "", error: "Supabase 미설정" };
 
-  const supabase = createClient();
+  const supabase = createAdminClient();
   const { data, error } = await supabase
     .from("rfp_reference_table_exports")
     .insert({

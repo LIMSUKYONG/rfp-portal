@@ -2,7 +2,7 @@
  * Server-only RFP functions — uses next/headers via Supabase server client.
  * Do NOT import this from "use client" components. Use rfp.client.ts instead.
  */
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type {
   RfpParsedProjectInfo,
   RfpParsedRule,
@@ -18,8 +18,11 @@ export interface CreateProjectInput {
 export async function createProject(
   input: CreateProjectInput,
 ): Promise<{ projectId: string; error: string | null }> {
-  const supabase = createClient();
+  const supabase = createAdminClient();
   const { projectInfo, rules, rfpFileUrl, rfpFileSizeMb } = input;
+
+  // Get default tenant_id
+  const DEFAULT_TENANT = "00000000-0000-0000-0000-000000000001";
 
   // Generate project code: RFP-YYYYMMDD-XXXX
   const now = new Date();
@@ -55,6 +58,7 @@ export async function createProject(
       rfp_file_size_mb: rfpFileSizeMb,
       rfp_parsed_at: new Date().toISOString(),
       rfp_parse_status: "completed",
+      tenant_id: DEFAULT_TENANT,
     })
     .select("id")
     .single();
@@ -76,6 +80,7 @@ export async function createProject(
       source_page: r.source_page,
       needs_review: r.needs_review,
       is_verified: false,
+      tenant_id: DEFAULT_TENANT,
     }));
 
     const { error: rulesError } = await supabase

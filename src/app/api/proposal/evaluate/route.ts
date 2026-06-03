@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { geminiPdfToJson } from "@/lib/ai/gemini-client";
 import { saveProposalEvaluation } from "@/lib/api/proposals";
 import { mockProposalEvaluate } from "@/lib/ai/mock-responses";
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
   }
 
   // 1. Download from Supabase Storage
-  const supabase = createClient();
+  const supabase = createAdminClient();
   const { data: fileData, error: downloadError } = await supabase.storage
     .from(PROPOSAL_BUCKET)
     .download(storagePath);

@@ -81,24 +81,63 @@ const EMPTY_RESPONSE: ParseRfpResponse = {
   laws: [],
 };
 
-export async function parseRfp(storagePath: string): Promise<ParseRfpResponse> {
+export type ParseStep = "general" | "documents" | "requirements" | "conditions";
+
+export const PARSE_STEPS: { key: ParseStep; label: string }[] = [
+  { key: "general", label: "1/4 일반사항 분석 중..." },
+  { key: "documents", label: "2/4 서류/서식 분석 중..." },
+  { key: "requirements", label: "3/4 기능요건 분석 중..." },
+  { key: "conditions", label: "4/4 제안조건 분석 중..." },
+];
+
+async function parseStep(storagePath: string, step: ParseStep): Promise<Record<string, unknown>> {
   const res = await fetch("/api/rfp/parse", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ storagePath }),
+    body: JSON.stringify({ storagePath, step }),
   });
 
   if (!res.ok) {
     const text = await res.text();
-    return { ...EMPTY_RESPONSE, error: `파싱 실패 (${res.status}): ${text}` };
+    throw new Error(`파싱 실패 (${res.status}): ${text}`);
   }
 
-  const data = await res.json();
+  return res.json();
+}
+
+/**
+ * Parse RFP in 4 sequential steps with progress callback.
+ */
+export async function parseRfp(
+  storagePath: string,
+  onStep?: (step: ParseStep, label: string) => void,
+): Promise<ParseRfpResponse> {
+  const merged: Record<string, unknown> = {};
+  const allRules: unknown[] = [];
+
+  try {
+    for (const { key, label } of PARSE_STEPS) {
+      onStep?.(key, label);
+      const result = await parseStep(storagePath, key);
+
+      // Merge top-level fields
+      if (result.projectInfo) merged.projectInfo = result.projectInfo;
+      if (result.documents) merged.documents = result.documents;
+      if (result.laws) merged.laws = result.laws;
+
+      // Accumulate rules from all steps
+      if (Array.isArray(result.rules)) {
+        allRules.push(...(result.rules as unknown[]));
+      }
+    }
+  } catch (err) {
+    return { ...EMPTY_RESPONSE, error: err instanceof Error ? err.message : "파싱 실패" };
+  }
+
   return {
-    projectInfo: data.projectInfo ?? EMPTY_RESPONSE.projectInfo,
-    rules: data.rules ?? [],
-    documents: data.documents ?? [],
-    laws: data.laws ?? [],
-    error: data.error,
+    projectInfo: (merged.projectInfo as ParseRfpResponse["projectInfo"]) ?? EMPTY_RESPONSE.projectInfo,
+    rules: allRules as RfpParsedRule[],
+    documents: (merged.documents as RfpParsedDocument[]) ?? [],
+    laws: (merged.laws as RfpParsedLaw[]) ?? [],
   };
 }

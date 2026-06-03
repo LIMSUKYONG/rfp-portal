@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type { Proposal } from "@/lib/types/database";
 
 function isSupabaseConfigured(): boolean {
@@ -20,7 +20,7 @@ export async function fetchLatestProposal(
     return { proposal: null, error: "Supabase 미설정" };
   }
 
-  const supabase = createClient();
+  const supabase = createAdminClient();
   const { data, error } = await supabase
     .from("rfp_proposals")
     .select("*")
@@ -59,7 +59,7 @@ export async function saveProposalEvaluation(
 ): Promise<{ proposalId: string; error: string | null }> {
   if (!isSupabaseConfigured()) return { proposalId: "", error: "Supabase 미설정" };
 
-  const supabase = createClient();
+  const supabase = createAdminClient();
 
   const { data, error } = await supabase
     .from("rfp_proposals")
@@ -85,7 +85,7 @@ export async function completeTrackA(
 ): Promise<{ error: string | null }> {
   if (!isSupabaseConfigured()) return { error: "Supabase 미설정" };
 
-  const supabase = createClient();
+  const supabase = createAdminClient();
   const { error } = await supabase
     .from("rfp_projects")
     .update({

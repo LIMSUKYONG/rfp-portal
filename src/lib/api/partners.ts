@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type { Partner, PartnerType } from "@/lib/types/database";
 
 function isSupabaseConfigured(): boolean {
@@ -25,7 +25,7 @@ export async function fetchPartners(
     return { partners: [], budgetAmount: null, subRateLimit: null, partnerPct: 0, error: "Supabase 미설정" };
   }
 
-  const supabase = createClient();
+  const supabase = createAdminClient();
 
   const [partnersRes, projectRes, ruleRes, completionRes] = await Promise.all([
     supabase
@@ -92,7 +92,7 @@ export async function createPartner(
 ): Promise<{ partner: Partner | null; error: string | null }> {
   if (!isSupabaseConfigured()) return { partner: null, error: "Supabase 미설정" };
 
-  const supabase = createClient();
+  const supabase = createAdminClient();
 
   const { data, error } = await supabase
     .from("rfp_partners")
@@ -122,7 +122,7 @@ export async function updatePartner(
 ): Promise<{ error: string | null }> {
   if (!isSupabaseConfigured()) return { error: "Supabase 미설정" };
 
-  const supabase = createClient();
+  const supabase = createAdminClient();
   const { error } = await supabase
     .from("rfp_partners")
     .update({ ...update, updated_at: new Date().toISOString() })
@@ -138,7 +138,7 @@ export async function deletePartner(
 ): Promise<{ error: string | null }> {
   if (!isSupabaseConfigured()) return { error: "Supabase 미설정" };
 
-  const supabase = createClient();
+  const supabase = createAdminClient();
   const { error } = await supabase
     .from("rfp_partners")
     .delete()

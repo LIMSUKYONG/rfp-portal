@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type {
   Document,
   DocumentProofItem,
@@ -53,7 +53,7 @@ export async function fetchDocuments(
     return { documents: [], documentPct: 0, checklistExtras: [], error: "Supabase 미설정" };
   }
 
-  const supabase = createClient();
+  const supabase = createAdminClient();
 
   const [docsRes, rulesRes, completionRes, extrasRes, proofsRes] = await Promise.all([
     supabase
@@ -129,7 +129,7 @@ export async function updateDocumentValidation(
 ): Promise<{ error: string | null }> {
   if (!isSupabaseConfigured()) return { error: "Supabase 미설정" };
 
-  const supabase = createClient();
+  const supabase = createAdminClient();
   const { error } = await supabase
     .from("rfp_documents")
     .update({

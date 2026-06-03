@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type {
   Project,
   ProjectCompletion,
@@ -57,7 +57,7 @@ export async function fetchDashboardData(): Promise<DashboardData> {
     };
   }
 
-  const supabase = createClient();
+  const supabase = createAdminClient();
 
   const [projectsRes, completionRes, risksRes] = await Promise.all([
     supabase.from("rfp_projects").select("*").order("created_at", { ascending: false }),
@@ -138,7 +138,7 @@ export async function fetchDashboardData(): Promise<DashboardData> {
 
 export async function resolveRisk(riskId: string): Promise<{ error: string | null }> {
   if (!isSupabaseConfigured()) return { error: "Supabase 미설정" };
-  const supabase = createClient();
+  const supabase = createAdminClient();
   const { error } = await supabase
     .from("rfp_risk_logs")
     .update({ is_resolved: true, resolved_at: new Date().toISOString() })

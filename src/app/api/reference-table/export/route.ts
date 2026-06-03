@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createRefTableExport } from "@/lib/api/reference-table";
 import type { ReferenceTableItem } from "@/lib/types/database";
 
@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "projectId가 필요합니다." }, { status: 400 });
   }
 
-  const supabase = createClient();
+  const supabase = createAdminClient();
 
   // Fetch items
   const { data, error } = await supabase

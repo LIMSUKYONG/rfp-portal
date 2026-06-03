@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type {
   QualificationCheck,
   ExperienceRecord,
@@ -35,7 +35,7 @@ export async function fetchQualifications(
     return { items: [], experienceRecords: [], projectPhase: null, error: "Supabase 미설정" };
   }
 
-  const supabase = createClient();
+  const supabase = createAdminClient();
 
   const [checksRes, rulesRes, expRes, projectRes] = await Promise.all([
     supabase
@@ -90,7 +90,7 @@ export async function updateCheckStatus(
     return { error: "Supabase 미설정" };
   }
 
-  const supabase = createClient();
+  const supabase = createAdminClient();
 
   const { error } = await supabase
     .from("rfp_qualification_checks")
@@ -113,7 +113,7 @@ export async function updateProjectPhase(
     return { error: "Supabase 미설정" };
   }
 
-  const supabase = createClient();
+  const supabase = createAdminClient();
 
   const { error } = await supabase
     .from("rfp_projects")

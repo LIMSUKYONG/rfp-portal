@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { PHASE_STYLE, PHASE_LABEL } from "@/lib/constants/phase";
 import { fetchReferenceTable } from "@/lib/api/reference-table";
 import { RefTableEditor } from "./_components/ref-table-editor";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 interface Props {
   params: { id: string };
@@ -16,7 +16,7 @@ export default async function ReferenceTablePage({ params }: Props) {
   // Get project name for export
   let projectName = "project";
   try {
-    const supabase = createClient();
+    const supabase = createAdminClient();
     const { data: proj } = await supabase
       .from("rfp_projects")
       .select("name")

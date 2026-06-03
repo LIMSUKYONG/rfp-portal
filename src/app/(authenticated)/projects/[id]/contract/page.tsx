@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { fetchContract } from "@/lib/api/contracts";
 import { ContractForm } from "./_components/contract-form";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 interface Props { params: { id: string } }
 
@@ -11,7 +11,7 @@ export default async function ContractPage({ params }: Props) {
 
   let projectName = "project";
   try {
-    const supabase = createClient();
+    const supabase = createAdminClient();
     const { data: proj } = await supabase.from("rfp_projects").select("name").eq("id", projectId).single();
     if (proj?.name) projectName = proj.name as string;
   } catch { /* ignore */ }

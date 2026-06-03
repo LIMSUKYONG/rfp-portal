@@ -41,6 +41,7 @@ export default function RfpNewPage() {
   const [step, setStep] = useState<Step>("upload");
   const [uploadPct, setUploadPct] = useState(0);
   const [parseIdx, setParseIdx] = useState(0);
+  const [parseMsg, setParseMsg] = useState("PDF 문서를 분석하고 있습니다…");
   const [error, setError] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
   const [storagePath, setStoragePath] = useState<string | null>(null);
@@ -106,14 +107,12 @@ export default function RfpNewPage() {
     setStoragePath(path);
     setUploadPct(100);
 
-    // Step 2: AI 파싱
+    // Step 2: AI 파싱 (4단계 분할)
     setStep("parsing");
-    const interval = setInterval(() => {
-      setParseIdx((i) => (i + 1) % PARSE_MESSAGES.length);
-    }, 3000);
 
-    const result = await parseRfp(path);
-    clearInterval(interval);
+    const result = await parseRfp(path, (_step, label) => {
+      setParseMsg(label);
+    });
 
     if (result.error) {
       setError(result.error);
@@ -271,7 +270,7 @@ export default function RfpNewPage() {
         <Card>
           <CardContent className="flex flex-col items-center py-16">
             <div data-testid="parse-spinner" className="mb-4 h-10 w-10 animate-spin rounded-full border-4 border-muted border-t-blue-500" />
-            <p className="text-sm text-muted-foreground">{PARSE_MESSAGES[parseIdx]}</p>
+            <p className="text-sm text-muted-foreground">{parseMsg}</p>
           </CardContent>
         </Card>
       )}

@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type {
   VrbReview,
   VrbDeptReview,
@@ -31,7 +31,7 @@ export async function fetchVrbReviews(
     return { vrbReview: null, deptReviews: [], profitLoss: null, vrb_deadline: null, projectPhase: null, error: "Supabase 미설정" };
   }
 
-  const supabase = createClient();
+  const supabase = createAdminClient();
 
   const [vrbRes, projectRes, plRes] = await Promise.all([
     supabase
@@ -81,7 +81,7 @@ export async function updateDeptReview(
 ): Promise<{ error: string | null }> {
   if (!isSupabaseConfigured()) return { error: "Supabase 미설정" };
 
-  const supabase = createClient();
+  const supabase = createAdminClient();
   const { error } = await supabase
     .from("rfp_vrb_dept_reviews")
     .update({ ...update, reviewed_at: new Date().toISOString() })
@@ -98,7 +98,7 @@ export async function approveVrb(
 ): Promise<{ error: string | null }> {
   if (!isSupabaseConfigured()) return { error: "Supabase 미설정" };
 
-  const supabase = createClient();
+  const supabase = createAdminClient();
 
   // Update vrb_reviews
   const { error: vrbErr } = await supabase
@@ -156,7 +156,7 @@ export async function fetchProfitLoss(
     };
   }
 
-  const supabase = createClient();
+  const supabase = createAdminClient();
 
   const [plRes, ruleRes] = await Promise.all([
     supabase
@@ -207,7 +207,7 @@ export async function updateProfitLoss(
 ): Promise<{ error: string | null }> {
   if (!isSupabaseConfigured()) return { error: "Supabase 미설정" };
 
-  const supabase = createClient();
+  const supabase = createAdminClient();
 
   // Check if profit_loss row exists
   const { data: existing } = await supabase
