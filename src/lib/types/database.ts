@@ -42,11 +42,6 @@ export interface Project {
   lukas_project_id: string | null;
   lukas_synced_at: string | null;
   lukas_pipeline_data: Record<string, unknown> | null;
-  tenant_id: string;
-  review_status: "draft" | "requested" | "approved" | "rejected";
-  requested_at: string | null;
-  approved_at: string | null;
-  approved_by: string | null;
   created_at: string;
   updated_at: string;
 }
