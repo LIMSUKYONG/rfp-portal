@@ -232,15 +232,29 @@ export interface RfpParseResult {
   rules: RfpParsedRule[];
 }
 
+export type PartnerType = "consortium" | "subcontract" | "goods_supply" | "direct_purchase";
+
 export interface Partner {
   id: string;
   project_id: string;
-  partner_type: string;
+  partner_type: PartnerType;
   company_name: string;
   is_sme_sw: boolean;
+  contact_email: string | null;
   share_rate: number | null;
+  share_amount: number | null;
   sub_amount: number | null;
   sub_rate: number | null;
-  status: string;
+  std_contract_used: boolean | null;
+  mm: number | null;
+  unit_price: number | null;
   work_scope: string | null;
+  goods_items: Record<string, unknown> | null;
+  goods_amount: number | null;
+  is_direct_purchase: boolean;
+  status: string;
+  last_mail_sent_at: string | null;
+  mail_sent_count: number;
+  created_at: string;
+  updated_at: string;
 }
