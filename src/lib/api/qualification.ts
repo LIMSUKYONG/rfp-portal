@@ -36,6 +36,22 @@ export async function fetchQualifications(
     return { items: [], experienceRecords: [], projectPhase: null, error: "Supabase 미설정" };
   }
 
+  try {
+    return await fetchQualificationsInner(projectId);
+  } catch (e) {
+    // 서버 컴포넌트가 크래시하지 않도록 빈 데이터로 폴백
+    return {
+      items: [],
+      experienceRecords: [],
+      projectPhase: null,
+      error: e instanceof Error ? e.message : "자격요건 조회 실패",
+    };
+  }
+}
+
+async function fetchQualificationsInner(
+  projectId: string,
+): Promise<QualificationData> {
   const supabase = createAdminClient();
 
   const [checksRes, rulesRes, expRes, projectRes] = await Promise.all([

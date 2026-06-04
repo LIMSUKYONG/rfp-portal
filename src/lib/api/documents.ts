@@ -76,6 +76,14 @@ export async function fetchDocuments(
     return { ...EMPTY, error: "Supabase 미설정" };
   }
 
+  try {
+    return await fetchDocumentsInner(projectId);
+  } catch (e) {
+    return { ...EMPTY, error: e instanceof Error ? e.message : "서류 조회 실패" };
+  }
+}
+
+async function fetchDocumentsInner(projectId: string): Promise<DocumentsData> {
   const supabase = createAdminClient();
 
   const [docsRes, rulesRes, extrasRes, proofsRes] = await Promise.all([

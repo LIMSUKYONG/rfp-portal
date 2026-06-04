@@ -33,6 +33,22 @@ export interface ProjectMember {
   created_at: string;
 }
 
+/**
+ * 가장 먼저 생성된 tenant id (개발/테스트 폴백용).
+ * 로그인 세션이 없는 환경에서 화면을 확인할 때만 사용한다.
+ */
+export async function getFirstTenantId(): Promise<string | null> {
+  if (!isSupabaseConfigured()) return null;
+  const supabase = createAdminClient();
+  const { data } = await supabase
+    .from("rfp_tenants")
+    .select("id")
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  return (data?.id as string | undefined) ?? null;
+}
+
 export async function registerTenant(input: {
   tenantName: string;
   pmEmail: string;

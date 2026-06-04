@@ -1,6 +1,7 @@
 /**
  * Client-safe document functions — no server-only imports.
  */
+import { readJsonSafe } from "@/lib/api/http";
 
 const DOC_BUCKET = "document-files";
 const MAX_DOC_SIZE = 20 * 1024 * 1024; // 20MB
@@ -85,8 +86,9 @@ export async function updateDocumentFile(
     return { validation_status: "error", error: `업데이트 실패: ${text || res.status}` };
   }
 
-  const json = (await res.json()) as { validation_status: string };
-  return { validation_status: json.validation_status, error: null };
+  const json = await readJsonSafe<{ validation_status: string }>(res);
+  // 빈 body 방어 — 요청은 성공(2xx)이므로 needs_review로 간주
+  return { validation_status: json?.validation_status ?? "needs_review", error: null };
 }
 
 export interface ValidateDocResponse {
@@ -110,16 +112,27 @@ export async function validateDocument(
   });
 
   if (!res.ok) {
-    const text = await res.text();
+    const text = await res.text().catch(() => "");
     return {
       validation_status: "error",
-      validation_message: `검증 실패: ${text}`,
+      validation_message: `검증 실패: ${text || res.status}`,
       calculated_score: null,
       ai_issue_date: null,
       ai_expiry_date: null,
-      error: text,
+      error: text || String(res.status),
     };
   }
 
-  return res.json() as Promise<ValidateDocResponse>;
+  const json = await readJsonSafe<ValidateDocResponse>(res);
+  if (!json) {
+    return {
+      validation_status: "error",
+      validation_message: "검증 응답이 비어 있습니다.",
+      calculated_score: null,
+      ai_issue_date: null,
+      ai_expiry_date: null,
+      error: "empty response",
+    };
+  }
+  return json;
 }
