@@ -183,13 +183,23 @@ export interface ExperienceRecord {
   pm: string | null;
 }
 
-export type DocValidationStatus = "valid" | "expiring_soon" | "error" | "needs_review" | "pending" | null;
+export type DocValidationStatus =
+  | "valid"
+  | "expired"
+  | "expiring_soon"
+  | "needs_review"
+  | "error"
+  | "pending"
+  | null;
+
+export type DocCategory = "form" | "proof";
 
 export interface Document {
   id: string;
   project_id: string;
   partner_id: string | null;
-  doc_category: string | null;
+  doc_category: DocCategory | null;
+  parent_document_id: string | null;
   doc_name: string;
   form_number: string | null;
   is_required: boolean;

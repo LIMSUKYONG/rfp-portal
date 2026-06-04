@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
+import type { CheckResult } from "@/lib/constants/checklist";
 import type {
   QualificationCheck,
   ExperienceRecord,
@@ -84,7 +85,7 @@ export async function fetchQualifications(
 
 export async function updateCheckStatus(
   checkId: string,
-  result: "pass" | "pending",
+  result: CheckResult,
 ): Promise<{ error: string | null }> {
   if (!isSupabaseConfigured()) {
     return { error: "Supabase 미설정" };
@@ -96,7 +97,8 @@ export async function updateCheckStatus(
     .from("rfp_qualification_checks")
     .update({
       check_result: result,
-      checked_at: result === "pass" ? new Date().toISOString() : null,
+      // 점검 완료(적합/해당없음)만 시각 기록, 확인중은 초기화
+      checked_at: result === "pending" ? null : new Date().toISOString(),
     })
     .eq("id", checkId);
 

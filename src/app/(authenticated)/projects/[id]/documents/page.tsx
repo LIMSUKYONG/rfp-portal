@@ -14,7 +14,12 @@ export default async function DocumentsPage({ params }: Props) {
   const data = await fetchDocuments(projectId);
 
   // If Supabase not configured we still render the shell
-  if (data.error && data.documents.length === 0 && !data.error.includes("미설정")) {
+  if (
+    data.error &&
+    data.forms.length === 0 &&
+    data.independentDocs.length === 0 &&
+    !data.error.includes("미설정")
+  ) {
     notFound();
   }
 
@@ -43,8 +48,11 @@ export default async function DocumentsPage({ params }: Props) {
 
       <DocumentList
         projectId={projectId}
-        documents={data.documents}
+        forms={data.forms}
+        independentDocs={data.independentDocs}
         documentPct={data.documentPct}
+        totalCount={data.totalCount}
+        validCount={data.validCount}
         checklistExtras={data.checklistExtras}
       />
     </main>

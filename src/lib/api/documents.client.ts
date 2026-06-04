@@ -61,6 +61,34 @@ export async function uploadDocumentFile(
   });
 }
 
+/**
+ * 업로드된 파일 경로를 문서에 연결하고 validation_status를 needs_review로 변경.
+ * (AI 검증은 다음 단계 — 지금은 needs_review 표시까지만)
+ */
+export async function updateDocumentFile(
+  docId: string,
+  fileUrl: string,
+  fileSizeMb: number,
+): Promise<{ validation_status: string; error: string | null }> {
+  const res = await fetch(`/api/documents/${docId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      file_url: fileUrl,
+      file_size_mb: fileSizeMb,
+      validation_status: "needs_review",
+    }),
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    return { validation_status: "error", error: `업데이트 실패: ${text || res.status}` };
+  }
+
+  const json = (await res.json()) as { validation_status: string };
+  return { validation_status: json.validation_status, error: null };
+}
+
 export interface ValidateDocResponse {
   validation_status: string;
   validation_message: string | null;

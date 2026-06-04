@@ -99,19 +99,33 @@ test.describe("SCR-201 컴포넌트 소스 검증", () => {
     expect(src).toContain("validateDocument");
   });
 
-  test("검증 결과 4단계 배지가 정의되어 있다", async () => {
+  test("검증 상태 5단계 배지가 상수에 정의되어 있다", async () => {
     const src = fs.readFileSync(
-      path.resolve(
-        __dirname,
-        "../../src/app/(authenticated)/projects/[id]/documents/_components/document-list.tsx",
-      ),
+      path.resolve(__dirname, "../../src/lib/constants/checklist.ts"),
       "utf-8",
     );
 
     expect(src).toContain("valid");
+    expect(src).toContain("expired");
     expect(src).toContain("expiring_soon");
-    expect(src).toContain("error");
     expect(src).toContain("needs_review");
+    expect(src).toContain("pending");
+    // 라벨/색상
+    expect(src).toContain("유효");
+    expect(src).toContain("기간만료");
+    expect(src).toContain("만료임박");
+    expect(src).toContain("검토필요");
+    expect(src).toContain("대기중");
+  });
+
+  test("서식/증빙 구분 뱃지가 정의되어 있다", async () => {
+    const src = fs.readFileSync(
+      path.resolve(__dirname, "../../src/lib/constants/checklist.ts"),
+      "utf-8",
+    );
+    expect(src).toContain("DOC_CATEGORY_BADGE");
+    expect(src).toContain("서식");
+    expect(src).toContain("증빙");
   });
 
   test("체크리스트 추가 항목 rule_type이 정의되어 있다", async () => {
@@ -136,9 +150,47 @@ test.describe("SCR-201 컴포넌트 소스 검증", () => {
     );
 
     expect(src).toContain("projectId: string");
-    expect(src).toContain("documents: DocumentWithProofs[]");
+    expect(src).toContain("forms: DocumentNode[]");
+    expect(src).toContain("independentDocs: DocumentWithProofs[]");
     expect(src).toContain("documentPct: number");
     expect(src).toContain("checklistExtras: RfpChecklistExtra[]");
+  });
+
+  test("계층형(서식→증빙) 구조 + 독립 서류 섹션이 구현되어 있다", async () => {
+    const apiSrc = fs.readFileSync(
+      path.resolve(__dirname, "../../src/lib/api/documents.ts"),
+      "utf-8",
+    );
+    const listSrc = fs.readFileSync(
+      path.resolve(
+        __dirname,
+        "../../src/app/(authenticated)/projects/[id]/documents/_components/document-list.tsx",
+      ),
+      "utf-8",
+    );
+    // API: parent_document_id 기반 트리 구성
+    expect(apiSrc).toContain("parent_document_id");
+    expect(apiSrc).toContain("DocumentNode");
+    expect(apiSrc).toContain("independentDocs");
+    // UI: 계층 렌더 + 독립 서류 섹션 + 카테고리 뱃지
+    expect(listSrc).toContain("form.children");
+    expect(listSrc).toContain("independent-docs");
+    expect(listSrc).toContain("category-badge-");
+  });
+
+  test("GET /api/documents, PATCH /api/documents/[id] 라우트가 존재한다", async () => {
+    const getSrc = fs.readFileSync(
+      path.resolve(__dirname, "../../src/app/api/documents/route.ts"),
+      "utf-8",
+    );
+    const patchSrc = fs.readFileSync(
+      path.resolve(__dirname, "../../src/app/api/documents/[id]/route.ts"),
+      "utf-8",
+    );
+    expect(getSrc).toContain("export async function GET");
+    expect(getSrc).toContain("projectId");
+    expect(patchSrc).toContain("export async function PATCH");
+    expect(patchSrc).toContain("validation_status");
   });
 
   test("AI 검증 API Route가 Gemini를 사용한다", async () => {

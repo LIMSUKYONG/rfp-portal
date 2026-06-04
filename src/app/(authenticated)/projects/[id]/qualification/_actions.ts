@@ -2,16 +2,12 @@
 
 import { revalidatePath } from "next/cache";
 import {
-  updateCheckStatus,
   confirmQualificationPass,
   updateProjectPhase,
 } from "@/lib/api/qualification";
 
-export async function toggleCheckResult(checkId: string, result: "pass" | "pending") {
-  const res = await updateCheckStatus(checkId, result);
-  revalidatePath("/projects/[id]/qualification", "page");
-  return res;
-}
+// 체크 결과 업데이트는 PATCH /api/qualification-checks/[id] 로 처리한다.
+// (qualification.client.ts > setCheckResult)
 
 export async function confirmAllPass(projectId: string) {
   const res = await confirmQualificationPass(projectId);

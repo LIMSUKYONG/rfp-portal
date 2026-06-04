@@ -54,8 +54,8 @@ test.describe("SCR-102 컴포넌트 소스 검증", () => {
       "qualification-page",
       "qualification-list",
       "check-item-",
-      "check-pass-",
-      "check-pending-",
+      "item-type-",
+      "condition-toggle-",
       "hint-records-",
       "pass-all-banner",
       "btn-start-track-a",
@@ -65,9 +65,38 @@ test.describe("SCR-102 컴포넌트 소스 검증", () => {
     for (const tid of requiredTestIds) {
       expect(allSrc).toContain(tid);
     }
+
+    // 판정 버튼 testid는 CHECK_RESULT_ORDER로 생성됨 → check-pass-/fail-/pending- (런타임)
+    expect(allSrc).toContain("check-${result}-");
   });
 
-  test("서버 액션에 toggleCheckResult, confirmAllPass가 정의되어 있다", async () => {
+  test("3종 판정 버튼(적합/해당없음/확인중)이 정의되어 있다", async () => {
+    const constSrc = fs.readFileSync(
+      path.resolve(__dirname, "../../src/lib/constants/checklist.ts"),
+      "utf-8",
+    );
+    expect(constSrc).toContain("적합");
+    expect(constSrc).toContain("해당없음");
+    expect(constSrc).toContain("확인중");
+    expect(constSrc).toContain("CHECK_RESULT_CONFIG");
+  });
+
+  test("check_result 업데이트가 PATCH API + 클라이언트 헬퍼로 처리된다", async () => {
+    const routeSrc = fs.readFileSync(
+      path.resolve(__dirname, "../../src/app/api/qualification-checks/[id]/route.ts"),
+      "utf-8",
+    );
+    const clientSrc = fs.readFileSync(
+      path.resolve(__dirname, "../../src/lib/api/qualification.client.ts"),
+      "utf-8",
+    );
+    expect(routeSrc).toContain("export async function PATCH");
+    expect(routeSrc).toContain("updateCheckStatus");
+    expect(clientSrc).toContain("setCheckResult");
+    expect(clientSrc).toContain("/api/qualification-checks/");
+  });
+
+  test("서버 액션에 confirmAllPass, setPhaseQualificationCheck가 정의되어 있다", async () => {
     const actionsSrc = fs.readFileSync(
       path.resolve(
         __dirname,
@@ -76,7 +105,6 @@ test.describe("SCR-102 컴포넌트 소스 검증", () => {
       "utf-8",
     );
 
-    expect(actionsSrc).toContain("toggleCheckResult");
     expect(actionsSrc).toContain("confirmAllPass");
     expect(actionsSrc).toContain("setPhaseQualificationCheck");
   });
@@ -129,7 +157,7 @@ test.describe("SCR-102 컴포넌트 소스 검증", () => {
       "utf-8",
     );
 
-    expect(src).toContain("allPassed");
+    expect(src).toContain("isChecklistComplete");
     expect(src).toContain("트랙A 시작");
     expect(src).toContain("트랙B 시작");
     expect(src).toContain("/documents");
